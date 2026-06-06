@@ -1,10 +1,10 @@
 //
 // =============================
-// CONFIG (ADD API KEYS)
+// CONFIG (OPTIONAL API KEYS)
 // =============================
 //
-const ADZUNA_APP_ID = "YOUR_APP_ID";
-const ADZUNA_APP_KEY = "YOUR_APP_KEY";
+const ADZUNA_APP_ID = "5df668db";
+const ADZUNA_APP_KEY = "3a8ebf8494b25d4ee83289b29fb84393";
 
 let results = [];
 
@@ -26,27 +26,27 @@ async function runSearch() {
   const recencyDays = parseInt(document.getElementById("recency").value) || 7;
 
   // -----------------------------
-  // 1. Build search query from resume (simple parsing)
+  // Resume-driven search query (neutral)
   // -----------------------------
-  const resumeKeywords = extractResumeKeywords(resumeText);
-
-  // Use first keyword as primary query (simple but effective baseline)
-  const searchQuery = resumeKeywords[0] || "jobs";
+  const searchQuery = extractResumeQuery(resumeText);
 
   let allJobs = [];
 
   // -----------------------------
-  // 2. Fetch real jobs (NO engineering bias anymore)
+  // Fetch real jobs (no domain bias)
   // -----------------------------
   try {
-    const realJobs = await fetchRealJobs(locationInput || "Los Angeles", searchQuery);
+    const realJobs = await fetchRealJobs(
+      locationInput || "Los Angeles",
+      searchQuery
+    );
     allJobs = allJobs.concat(realJobs);
   } catch (err) {
     console.log("API not used or failed:", err);
   }
 
   // -----------------------------
-  // 3. Score jobs
+  // Score jobs
   // -----------------------------
   results = allJobs.map(job => ({
     ...job,
@@ -60,33 +60,43 @@ async function runSearch() {
 
 //
 // =============================
-// BASIC RESUME PARSER (VERY SIMPLE v1)
+// NEUTRAL RESUME QUERY BUILDER
+// (NO INDUSTRY ASSUMPTIONS)
 // =============================
 //
-function extractResumeKeywords(text) {
-  if (!text) return [];
+function extractResumeQuery(text) {
+  if (!text) return "jobs";
 
-  // Lightweight keyword extraction (NOT AI yet)
-  const keywords = [
-    "engineer",
-    "mechanical",
-    "manufacturing",
-    "robotics",
-    "welding",
-    "cad",
-    "design",
-    "systems",
-    "electronics",
-    "software",
-    "python"
-  ];
+  const cleaned = text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ");
 
-  return keywords.filter(k => text.includes(k));
+  const words = cleaned.split(/\s+/).filter(Boolean);
+
+  const stopWords = new Set([
+    "the","and","to","of","in","a","for","with","on","at",
+    "by","an","is","it","this","that","i","you","we","they",
+    "was","were","be","as","are","from","or","have","has","had"
+  ]);
+
+  const filtered = words.filter(w => w.length > 2 && !stopWords.has(w));
+
+  // take most frequent words (simple heuristic)
+  const freq = {};
+  filtered.forEach(w => {
+    freq[w] = (freq[w] || 0) + 1;
+  });
+
+  const sorted = Object.entries(freq)
+    .sort((a, b) => b[1] - a[1])
+    .map(x => x[0]);
+
+  return sorted[0] || "jobs";
 }
 
 //
 // =============================
-// REAL JOB FETCH (NO FIXED DOMAIN BIAS)
+// REAL JOB FETCH
 // =============================
 //
 async function fetchRealJobs(location, query) {
@@ -111,14 +121,14 @@ async function fetchRealJobs(location, query) {
   return data.results.map(job => ({
     title: job.title,
     location: job.location?.display_name || "Unknown",
-    skills: [], // intentionally empty for now
+    skills: [],
     postedDaysAgo: calculateDaysAgo(job.created)
   }));
 }
 
 //
 // =============================
-// DATE HELPERS
+// DATE CALCULATION
 // =============================
 //
 function calculateDaysAgo(dateString) {
@@ -135,27 +145,21 @@ function calculateDaysAgo(dateString) {
 function scoreJob(job, resumeText, userSkills, locationInput, radius, recencyDays) {
   let score = 0;
 
-  // -----------------------------
-  // 1. Manual skills (strongest signal for testing)
-  // -----------------------------
+  // manual skills (strong signal)
   userSkills.forEach(skill => {
     if (job.skills.includes(skill)) {
       score += 15;
     }
   });
 
-  // -----------------------------
-  // 2. Resume keyword match (improved signal)
-  // -----------------------------
+  // resume text match (neutral)
   job.skills.forEach(skill => {
     if (resumeText.includes(skill)) {
       score += 10;
     }
   });
 
-  // -----------------------------
-  // 3. Location match
-  // -----------------------------
+  // location match
   if (
     locationInput &&
     job.location.toLowerCase().includes(locationInput.toLowerCase())
@@ -163,15 +167,11 @@ function scoreJob(job, resumeText, userSkills, locationInput, radius, recencyDay
     score += 10;
   }
 
-  // -----------------------------
-  // 4. Radius (still placeholder)
-  // -----------------------------
+  // radius placeholder
   if (radius >= 50) score += 2;
   if (radius >= 100) score += 4;
 
-  // -----------------------------
-  // 5. Recency filter
-  // -----------------------------
+  // recency
   if (job.postedDaysAgo <= recencyDays) {
     score += 8;
   } else {
@@ -183,7 +183,7 @@ function scoreJob(job, resumeText, userSkills, locationInput, radius, recencyDay
 
 //
 // =============================
-// RENDER TABLE
+// RENDER RESULTS
 // =============================
 //
 function renderTable() {
