@@ -14,20 +14,16 @@ let results = [];
 // =============================
 //
 async function runSearch() {
-  const resumeText = document.getElementById("resume").value.toLowerCase();
-
+  const resumeText = document.getElementById("resume").value;
   const skillsInput = document.getElementById("skills").value.toLowerCase();
+
   const userSkills = skillsInput
     ? skillsInput.split(",").map(s => s.trim()).filter(Boolean)
     : [];
 
   const locationInput = document.getElementById("location").value;
-  const radius = parseInt(document.getElementById("radius").value) || 50;
   const recencyDays = parseInt(document.getElementById("recency").value) || 7;
 
-  // -----------------------------
-  // Build search query (resume + skills)
-  // -----------------------------
   const searchQuery = buildQuery(resumeText, userSkills);
 
   let allJobs = [];
@@ -39,7 +35,7 @@ async function runSearch() {
       recencyDays
     );
 
-    allJobs = allJobs.concat(jobs);
+    allJobs = jobs;
   } catch (err) {
     console.log("API failed:", err);
   }
@@ -51,14 +47,14 @@ async function runSearch() {
 
 //
 // =============================
-// BUILD QUERY FROM RESUME + SKILLS
+// QUERY BUILDER (UPDATED)
 // =============================
 //
 function buildQuery(resumeText, skills) {
-  const resumeQuery = extractWords(resumeText);
-  const skillsQuery = skills.join(" ");
+  const skillSignal = buildSkillSignal(skills);
+  const resumeSignal = extractResumeSignals(resumeText);
 
-  return [resumeQuery, skillsQuery]
+  return [skillSignal, resumeSignal]
     .filter(Boolean)
     .join(" ")
     .trim() || "jobs";
@@ -66,12 +62,67 @@ function buildQuery(resumeText, skills) {
 
 //
 // =============================
-// SIMPLE TEXT PARSER
+// SKILLS (HIGHEST PRIORITY)
 // =============================
 //
-function extractWords(text) {
+function buildSkillSignal(skills) {
+  // keep full user input as strongest signal
+  return skills.join(" ");
+}
+
+//
+// =============================
+// RESUME SIGNAL EXTRACTION
+// =============================
+//
+function extractResumeSignals(text) {
   if (!text) return "";
 
+  const sections = splitIntoSections(text);
+
+  const recentRoles = extractRecentRoles(sections);
+  const resumeKeywords = extractKeywords(text, 40);
+
+  return [
+    recentRoles,
+    resumeKeywords
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+//
+// =============================
+// SPLIT INTO ROUGH "POSITIONS"
+// =============================
+// (heuristic, not perfect but useful)
+// =============================
+//
+function splitIntoSections(text) {
+  // try splitting by common resume delimiters
+  return text
+    .split(/\n(?=[A-Z][a-z]+\s|Experience|EXPERIENCE|Work|WORK|Employment)/)
+    .slice(0, 5);
+}
+
+//
+// =============================
+// EXTRACT RECENT ROLES
+// =============================
+//
+function extractRecentRoles(sections) {
+  return sections
+    .slice(0, 5)
+    .map(sec => extractKeywords(sec, 10))
+    .join(" ");
+}
+
+//
+// =============================
+// KEYWORD EXTRACTION
+// =============================
+//
+function extractKeywords(text, limit) {
   const cleaned = text.toLowerCase().replace(/[^a-z0-9\s]/g, " ");
   const words = cleaned.split(/\s+/).filter(Boolean);
 
@@ -81,15 +132,14 @@ function extractWords(text) {
     "was","were","be","as","are","from","or","have","has","had"
   ]);
 
-  return words
-    .filter(w => w.length > 2 && !stopWords.has(w))
-    .slice(0, 5)
-    .join(" ");
+  const filtered = words.filter(w => w.length > 2 && !stopWords.has(w));
+
+  return filtered.slice(0, limit).join(" ");
 }
 
 //
 // =============================
-// ADZUNA API CALL (RECENCY FIXED)
+// API
 // =============================
 //
 async function fetchRealJobs(location, query, recencyDays) {
@@ -106,52 +156,40 @@ async function fetchRealJobs(location, query, recencyDays) {
   const res = await fetch(url);
   const data = await res.json();
 
-  console.log("ADZUNA RESPONSE:", data);
-
   if (!data.results) return [];
 
-  return data.results.map(job => {
-    return {
-      title: job.title,
-      employer: job.company?.display_name || "Unknown",
-      location: formatLocation(job.location?.display_name || ""),
-      posted: formatDate(job.created),
-      link: job.redirect_url || "#"
-    };
-  });
+  return data.results.map(job => ({
+    title: job.title,
+    employer: job.company?.display_name || "Unknown",
+    location: formatLocation(job.location?.display_name || ""),
+    posted: formatDate(job.created),
+    link: job.redirect_url || "#"
+  }));
 }
 
 //
 // =============================
-// FORMAT LOCATION (City, ST)
+// FORMAT HELPERS
 // =============================
 //
 function formatLocation(str) {
   if (!str) return "Unknown";
 
   const parts = str.split(",");
-
   const city = parts[0]?.trim() || "";
   const state = parts[1]?.trim()?.slice(0, 2)?.toUpperCase() || "";
 
   return state ? `${city}, ${state}` : city;
 }
 
-//
-// =============================
-// FORMAT DATE
-// =============================
-//
 function formatDate(dateStr) {
   if (!dateStr) return "Unknown";
-
-  const d = new Date(dateStr);
-  return d.toLocaleDateString();
+  return new Date(dateStr).toLocaleDateString();
 }
 
 //
 // =============================
-// RENDER TABLE
+// TABLE RENDER
 // =============================
 //
 function renderTable() {
