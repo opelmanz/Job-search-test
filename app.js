@@ -10,48 +10,60 @@ let results = [];
 
 //
 // =====================
-// ENTRY
+// MAIN ENTRY
 // =====================
 //
 async function runSearch() {
-  console.log("RUN SEARCH");
-
-  const skillsRaw = document.getElementById("skills").value || "";
-  const location = document.getElementById("location").value || "Los Angeles";
-  const radius = parseInt(document.getElementById("radius").value) || 0;
-  const recency = parseInt(document.getElementById("recency").value) || 7;
-
-  const skills = parseSkills(skillsRaw);
-  const query = buildQuery(skills);
-
-  const locations = expandLocation(location, radius);
-
-  document.getElementById("requestPreview").textContent = JSON.stringify({
-    skills,
-    query,
-    baseLocation: location,
-    radius,
-    expandedLocations: locations
-  }, null, 2);
-
-  let all = [];
+  console.log("RUN SEARCH FIRED");
 
   try {
+    const skillsRaw = document.getElementById("skills").value || "";
+    const location = document.getElementById("location").value || "Los Angeles";
+    const radius = parseInt(document.getElementById("radius").value) || 0;
+    const recency = parseInt(document.getElementById("recency").value) || 7;
+
+    const skills = parseSkills(skillsRaw);
+    const query = buildQuery(skills);
+
+    const locations = expandLocation(location, radius);
+
+    console.log("INPUT:", { skills, location, radius, recency });
+    console.log("QUERY:", query);
+    console.log("EXPANDED LOCATIONS:", locations);
+
+    document.getElementById("requestPreview").textContent = JSON.stringify({
+      skills,
+      query,
+      location,
+      radius,
+      expandedLocations: locations,
+      recency
+    }, null, 2);
+
+    let allResults = [];
+
     for (const loc of locations) {
+      console.log("FETCHING:", loc);
+
       const url = buildUrl(loc, query, recency);
+      console.log("URL:", url);
+
       const data = await fetchJobs(url);
 
-      all = all.concat(data);
+      console.log("RESULTS FROM LOCATION:", loc, data.length);
+
+      allResults = allResults.concat(data);
     }
 
-    results = dedupe(all);
+    results = dedupe(allResults);
+
+    console.log("TOTAL RESULTS:", results.length);
+
+    render();
 
   } catch (err) {
-    console.error("API ERROR:", err);
-    results = [];
+    console.error("RUN SEARCH ERROR:", err);
   }
-
-  render();
 }
 
 //
@@ -67,13 +79,19 @@ function parseSkills(input) {
     .filter(Boolean);
 }
 
+//
+// =====================
+// QUERY BUILDER
+// =====================
+//
 function buildQuery(skills) {
+  // simple, stable, predictable
   return skills.slice(0, 8).join(" ");
 }
 
 //
 // =====================
-// DISTANCE LOGIC
+// DISTANCE EXPANSION
 // =====================
 //
 function expandLocation(base, radius) {
@@ -105,7 +123,9 @@ function expandLocation(base, radius) {
   };
 
   for (const key in map) {
-    if (loc.includes(key)) return map[key];
+    if (loc.includes(key)) {
+      return map[key];
+    }
   }
 
   return [base];
@@ -120,7 +140,7 @@ async function fetchJobs(url) {
   const res = await fetch(url);
 
   if (!res.ok) {
-    throw new Error(`HTTP ${res.status}`);
+    throw new Error(`HTTP ERROR ${res.status}`);
   }
 
   const data = await res.json();
@@ -130,12 +150,14 @@ async function fetchJobs(url) {
 
   if (!data.results) return [];
 
-  return data.results.map(j => ({
-    title: j.title,
-    employer: j.company?.display_name || "Unknown",
-    location: j.location?.display_name || "Unknown",
-    posted: j.created ? new Date(j.created).toLocaleDateString() : "Unknown",
-    link: j.redirect_url || "#"
+  return data.results.map(job => ({
+    title: job.title,
+    employer: job.company?.display_name || "Unknown",
+    location: job.location?.display_name || "Unknown",
+    posted: job.created
+      ? new Date(job.created).toLocaleDateString()
+      : "Unknown",
+    link: job.redirect_url || "#"
   }));
 }
 
@@ -158,7 +180,7 @@ function buildUrl(location, query, recency) {
 
 //
 // =====================
-// DEDUPE
+// DEDUPE RESULTS
 // =====================
 //
 function dedupe(jobs) {
@@ -174,24 +196,27 @@ function dedupe(jobs) {
 
 //
 // =====================
-// RENDER
+// RENDER TABLE
 // =====================
 //
 function render() {
   const tbody = document.querySelector("#resultsTable tbody");
   tbody.innerHTML = "";
 
-  for (const j of results) {
+  if (!results || results.length === 0) {
+    console.warn("NO RESULTS FOUND");
+    return;
+  }
+
+  for (const job of results) {
     tbody.innerHTML += `
       <tr>
-        <td>${j.title}</td>
-        <td>${j.employer}</td>
-        <td>${j.location}</td>
-        <td>${j.posted}</td>
-        <td><a href="${j.link}" target="_blank">View</a></td>
+        <td>${job.title}</td>
+        <td>${job.employer}</td>
+        <td>${job.location}</td>
+        <td>${job.posted}</td>
+        <td><a href="${job.link}" target="_blank">View</a></td>
       </tr>
     `;
-  }
-}
   }
 }
