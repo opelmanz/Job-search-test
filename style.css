@@ -4,37 +4,29 @@ body {
   margin: 0;
 }
 
+/* =========================
+   MAIN CONTAINER (WIDER FIX)
+   ========================= */
 .container {
-  max-width: 800px;
+  width: 100%;
+  max-width: 1400px;   /* increased from 800px */
   margin: 40px auto;
   background: white;
   padding: 20px;
   border-radius: 10px;
 }
 
+/* =========================
+   INPUTS
+   ========================= */
 input {
   width: 100%;
   padding: 10px;
   margin: 8px 0;
+  box-sizing: border-box;
 }
 
-button {
-  padding: 10px 15px;
-  margin-top: 10px;
-  cursor: pointer;
-}
-
-table {
-  width: 100%;
-  margin-top: 20px;
-  border-collapse: collapse;
-}
-
-th, td {
-  border: 1px solid #ddd;
-  padding: 8px;
-}
-
+/* resume box already good — just keep consistent */
 #resume {
   width: 100%;
   min-height: 150px;
@@ -45,9 +37,14 @@ th, td {
   box-sizing: border-box;
 }
 
+/* radius smaller field */
 #radius {
   width: 100px;
 }
+
+/* =========================
+   BUTTON (cleaned duplicate)
+   ========================= */
 button {
   display: block;
   margin: 20px auto;
@@ -59,4 +56,24 @@ button {
   cursor: pointer;
   background-color: #2d6cdf;
   color: white;
+}
+
+/* =========================
+   TABLE
+   ========================= */
+table {
+  width: 100%;
+  margin-top: 20px;
+  border-collapse: collapse;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+/* make table use full width nicely on large screens */
+th {
+  background: #eee;
 }
