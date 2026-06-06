@@ -9,9 +9,7 @@ const ADZUNA_APP_KEY = "3a8ebf8494b25d4ee83289b29fb84393";
 let results = [];
 
 //
-// =============================
 // MAIN SEARCH
-// =============================
 //
 async function runSearch() {
   const resumeText = document.getElementById("resume").value.toLowerCase();
@@ -22,76 +20,60 @@ async function runSearch() {
     : [];
 
   const locationInput = document.getElementById("location").value;
-  const radius = parseInt(document.getElementById("radius").value) || 50;
-  const recencyDays = parseInt(document.getElementById("recency").value) || 7;
 
-  const searchQuery = extractResumeQuery(resumeText);
+  const searchQuery = buildQuery(resumeText, userSkills);
 
   let allJobs = [];
 
   try {
-    const realJobs = await fetchRealJobs(
-      locationInput || "Los Angeles",
-      searchQuery
-    );
-
-    allJobs = allJobs.concat(realJobs);
+    const jobs = await fetchRealJobs(locationInput || "Los Angeles", searchQuery);
+    allJobs = allJobs.concat(jobs);
   } catch (err) {
     console.log("API failed:", err);
   }
 
-  results = allJobs.map(job => ({
-    ...job,
-    score: scoreJob(job, resumeText, userSkills, locationInput, radius, recencyDays)
-  }));
-
-  results.sort((a, b) => b.score - a.score);
+  results = allJobs;
 
   renderTable();
 }
 
 //
-// =============================
-// RESUME QUERY EXTRACTION
-// =============================
+// BUILD QUERY FROM RESUME + SKILLS
 //
-function extractResumeQuery(text) {
-  if (!text) return "jobs";
+function buildQuery(resumeText, skills) {
+  const resumeWords = extractWords(resumeText);
+  const skillWords = skills.join(" ");
 
-  const cleaned = text
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, " ");
+  return [resumeWords, skillWords]
+    .filter(Boolean)
+    .join(" ")
+    .trim() || "jobs";
+}
 
+//
+// BASIC TEXT PARSER
+//
+function extractWords(text) {
+  if (!text) return "";
+
+  const cleaned = text.toLowerCase().replace(/[^a-z0-9\s]/g, " ");
   const words = cleaned.split(/\s+/).filter(Boolean);
 
   const stopWords = new Set([
     "the","and","to","of","in","a","for","with","on","at",
-    "by","an","is","it","this","that","i","you","we","they",
-    "was","were","be","as","are","from","or","have","has","had"
+    "by","an","is","it","this","that","i","you","we","they"
   ]);
 
-  const filtered = words.filter(w => w.length > 2 && !stopWords.has(w));
-
-  const freq = {};
-  filtered.forEach(w => {
-    freq[w] = (freq[w] || 0) + 1;
-  });
-
-  return Object.entries(freq)
-    .sort((a, b) => b[1] - a[1])
-    .map(x => x[0])[0] || "jobs";
+  return words
+    .filter(w => w.length > 2 && !stopWords.has(w))
+    .slice(0, 5)
+    .join(" ");
 }
 
 //
-// =============================
-// ADZUNA API
-// =============================
+// API CALL
 //
 async function fetchRealJobs(location, query) {
-  if (!ADZUNA_APP_ID || !ADZUNA_APP_KEY) {
-    throw new Error("Missing API keys");
-  }
-
   const url =
     `https://api.adzuna.com/v1/api/jobs/us/search/1` +
     `?app_id=${ADZUNA_APP_ID}` +
@@ -101,70 +83,48 @@ async function fetchRealJobs(location, query) {
     `&results_per_page=10` +
     `&content-type=application/json`;
 
-  const response = await fetch(url);
-  const data = await response.json();
+  const res = await fetch(url);
+  const data = await res.json();
 
   if (!data.results) return [];
 
-  return data.results.map(job => ({
-    title: job.title,
-    employer: job.company?.display_name || "Unknown",
-    location: job.location?.display_name || "Unknown",
-    skills: [],
-    postedDaysAgo: calculateDaysAgo(job.created)
-  }));
-}
+  return data.results.map(job => {
+    const loc = formatLocation(job.location?.display_name || "");
 
-//
-// =============================
-// DATE UTILITY
-// =============================
-//
-function calculateDaysAgo(dateString) {
-  const posted = new Date(dateString);
-  const now = new Date();
-  return Math.floor((now - posted) / (1000 * 60 * 60 * 24));
-}
-
-//
-// =============================
-// SCORING ENGINE
-// =============================
-//
-function scoreJob(job, resumeText, userSkills, locationInput, radius, recencyDays) {
-  let score = 0;
-
-  userSkills.forEach(skill => {
-    if (job.skills.includes(skill)) score += 15;
+    return {
+      title: job.title,
+      employer: job.company?.display_name || "Unknown",
+      location: loc,
+      posted: formatDate(job.created),
+      link: job.redirect_url || "#"
+    };
   });
-
-  job.skills.forEach(skill => {
-    if (resumeText.includes(skill)) score += 10;
-  });
-
-  if (
-    locationInput &&
-    job.location.toLowerCase().includes(locationInput.toLowerCase())
-  ) {
-    score += 10;
-  }
-
-  if (radius >= 50) score += 2;
-  if (radius >= 100) score += 4;
-
-  if (job.postedDaysAgo <= recencyDays) {
-    score += 8;
-  } else {
-    score -= 2;
-  }
-
-  return score;
 }
 
 //
-// =============================
-// RENDER TABLE (UPDATED COLUMN)
-// =============================
+// FORMAT LOCATION (City, ST)
+//
+function formatLocation(str) {
+  if (!str) return "Unknown";
+
+  const parts = str.split(",");
+
+  const city = parts[0]?.trim() || "";
+  const state = parts[1]?.trim()?.slice(0, 2)?.toUpperCase() || "";
+
+  return state ? `${city}, ${state}` : city;
+}
+
+//
+// FORMAT DATE
+//
+function formatDate(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString();
+}
+
+//
+// RENDER TABLE
 //
 function renderTable() {
   const tbody = document.querySelector("#resultsTable tbody");
@@ -176,22 +136,21 @@ function renderTable() {
         <td>${job.title}</td>
         <td>${job.employer}</td>
         <td>${job.location}</td>
-        <td>${job.score}</td>
+        <td>${job.posted}</td>
+        <td><a href="${job.link}" target="_blank">View</a></td>
       </tr>
     `;
   });
 }
 
 //
-// =============================
-// CSV EXPORT (UPDATED COLUMN)
-// =============================
+// CSV EXPORT
 //
 function downloadCSV() {
-  let csv = "Title,Employer,Location,Score\n";
+  let csv = "Title,Employer,Location,Posted,Link\n";
 
   results.forEach(job => {
-    csv += `${job.title},${job.employer},${job.location},${job.score}\n`;
+    csv += `${job.title},${job.employer},${job.location},${job.posted},${job.link}\n`;
   });
 
   const blob = new Blob([csv], { type: "text/csv" });
@@ -199,6 +158,6 @@ function downloadCSV() {
 
   const a = document.createElement("a");
   a.href = url;
-  a.download = "job_results.csv";
+  a.download = "jobs.csv";
   a.click();
 }
