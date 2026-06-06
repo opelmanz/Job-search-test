@@ -1,1 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Job Matcher</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
 
+  <div class="container">
+    <h1>Job Matcher</h1>
+
+    <p>Enter your skills and location:</p>
+
+    <input id="skills" placeholder="Skills (comma separated: welding, CAD, python)" />
+    <input id="location" placeholder="Location (e.g. Los Angeles)" />
+
+    <button onclick="runSearch()">Find Jobs</button>
+
+    <h2>Results</h2>
+    <table id="resultsTable">
+      <thead>
+        <tr>
+          <th>Job Title</th>
+          <th>Location</th>
+          <th>Score</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <button onclick="downloadCSV()">Download CSV</button>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
