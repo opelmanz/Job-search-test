@@ -26,27 +26,38 @@ async function runSearch() {
   const recencyDays = parseInt(document.getElementById("recency").value) || 7;
 
   // -----------------------------
-  // Resume-driven search query (neutral)
+  // BUILD COMBINED SEARCH QUERY
   // -----------------------------
-  const searchQuery = extractResumeQuery(resumeText);
+  const resumeQuery = extractResumeQuery(resumeText);
+
+  const skillsQuery = userSkills.length > 0
+    ? userSkills.join(" ")
+    : "";
+
+  // Combined query = resume intent + explicit skills
+  const searchQuery = [resumeQuery, skillsQuery]
+    .filter(Boolean)
+    .join(" ")
+    .trim() || "jobs";
 
   let allJobs = [];
 
   // -----------------------------
-  // Fetch real jobs (no domain bias)
+  // FETCH JOBS
   // -----------------------------
   try {
     const realJobs = await fetchRealJobs(
       locationInput || "Los Angeles",
       searchQuery
     );
+
     allJobs = allJobs.concat(realJobs);
   } catch (err) {
-    console.log("API not used or failed:", err);
+    console.log("API failed:", err);
   }
 
   // -----------------------------
-  // Score jobs
+  // SCORE JOBS
   // -----------------------------
   results = allJobs.map(job => ({
     ...job,
@@ -60,12 +71,11 @@ async function runSearch() {
 
 //
 // =============================
-// NEUTRAL RESUME QUERY BUILDER
-// (NO INDUSTRY ASSUMPTIONS)
+// RESUME QUERY EXTRACTION (neutral)
 // =============================
 //
 function extractResumeQuery(text) {
-  if (!text) return "jobs";
+  if (!text) return "";
 
   const cleaned = text
     .toLowerCase()
@@ -81,22 +91,19 @@ function extractResumeQuery(text) {
 
   const filtered = words.filter(w => w.length > 2 && !stopWords.has(w));
 
-  // take most frequent words (simple heuristic)
   const freq = {};
   filtered.forEach(w => {
     freq[w] = (freq[w] || 0) + 1;
   });
 
-  const sorted = Object.entries(freq)
+  return Object.entries(freq)
     .sort((a, b) => b[1] - a[1])
-    .map(x => x[0]);
-
-  return sorted[0] || "jobs";
+    .map(x => x[0])[0] || "";
 }
 
 //
 // =============================
-// REAL JOB FETCH
+// ADZUNA API CALL
 // =============================
 //
 async function fetchRealJobs(location, query) {
@@ -128,7 +135,7 @@ async function fetchRealJobs(location, query) {
 
 //
 // =============================
-// DATE CALCULATION
+// DATE HELP
 // =============================
 //
 function calculateDaysAgo(dateString) {
@@ -145,21 +152,18 @@ function calculateDaysAgo(dateString) {
 function scoreJob(job, resumeText, userSkills, locationInput, radius, recencyDays) {
   let score = 0;
 
-  // manual skills (strong signal)
   userSkills.forEach(skill => {
     if (job.skills.includes(skill)) {
       score += 15;
     }
   });
 
-  // resume text match (neutral)
   job.skills.forEach(skill => {
     if (resumeText.includes(skill)) {
       score += 10;
     }
   });
 
-  // location match
   if (
     locationInput &&
     job.location.toLowerCase().includes(locationInput.toLowerCase())
@@ -167,11 +171,9 @@ function scoreJob(job, resumeText, userSkills, locationInput, radius, recencyDay
     score += 10;
   }
 
-  // radius placeholder
   if (radius >= 50) score += 2;
   if (radius >= 100) score += 4;
 
-  // recency
   if (job.postedDaysAgo <= recencyDays) {
     score += 8;
   } else {
@@ -183,7 +185,7 @@ function scoreJob(job, resumeText, userSkills, locationInput, radius, recencyDay
 
 //
 // =============================
-// RENDER RESULTS
+// RENDER TABLE
 // =============================
 //
 function renderTable() {
