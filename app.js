@@ -122,6 +122,7 @@ async function fetchRealJobs(location, query) {
 
   const response = await fetch(url);
   const data = await response.json();
+  console.log("ADZUNA RAW RESPONSE:", data);
 
   if (!data.results) return [];
 
