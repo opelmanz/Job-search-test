@@ -1,36 +1,10 @@
 //
 // =============================
-// CONFIG (OPTIONAL API KEYS)
+// CONFIG (ADD API KEYS)
 // =============================
 //
 const ADZUNA_APP_ID = "YOUR_APP_ID";
 const ADZUNA_APP_KEY = "YOUR_APP_KEY";
-
-//
-// =============================
-// FAKE DATA (for fallback only)
-// =============================
-//
-const jobs = [
-  {
-    title: "Manufacturing Engineer",
-    location: "Los Angeles, CA",
-    skills: ["welding", "cad", "manufacturing"],
-    postedDaysAgo: 2
-  },
-  {
-    title: "Product Engineer",
-    location: "Remote",
-    skills: ["design", "systems", "cad"],
-    postedDaysAgo: 10
-  },
-  {
-    title: "Robotics Technician",
-    location: "Los Angeles, CA",
-    skills: ["robotics", "maintenance", "electronics"],
-    postedDaysAgo: 5
-  }
-];
 
 let results = [];
 
@@ -42,26 +16,38 @@ let results = [];
 async function runSearch() {
   const resumeText = document.getElementById("resume").value.toLowerCase();
 
-  // NEW: manual skills input (your testing control knob)
   const skillsInput = document.getElementById("skills").value.toLowerCase();
   const userSkills = skillsInput
-    ? skillsInput.split(",").map(s => s.trim())
+    ? skillsInput.split(",").map(s => s.trim()).filter(Boolean)
     : [];
 
   const locationInput = document.getElementById("location").value;
   const radius = parseInt(document.getElementById("radius").value) || 50;
   const recencyDays = parseInt(document.getElementById("recency").value) || 7;
 
-  let allJobs = [...jobs];
+  // -----------------------------
+  // 1. Build search query from resume (simple parsing)
+  // -----------------------------
+  const resumeKeywords = extractResumeKeywords(resumeText);
 
-  // Try real jobs (safe fallback)
+  // Use first keyword as primary query (simple but effective baseline)
+  const searchQuery = resumeKeywords[0] || "jobs";
+
+  let allJobs = [];
+
+  // -----------------------------
+  // 2. Fetch real jobs (NO engineering bias anymore)
+  // -----------------------------
   try {
-    const realJobs = await fetchRealJobs(locationInput || "Los Angeles", "engineering");
+    const realJobs = await fetchRealJobs(locationInput || "Los Angeles", searchQuery);
     allJobs = allJobs.concat(realJobs);
   } catch (err) {
     console.log("API not used or failed:", err);
   }
 
+  // -----------------------------
+  // 3. Score jobs
+  // -----------------------------
   results = allJobs.map(job => ({
     ...job,
     score: scoreJob(job, resumeText, userSkills, locationInput, radius, recencyDays)
@@ -74,10 +60,36 @@ async function runSearch() {
 
 //
 // =============================
-// REAL JOB FETCH (NO SKILL GUESSING)
+// BASIC RESUME PARSER (VERY SIMPLE v1)
 // =============================
 //
-async function fetchRealJobs(location, query = "engineering") {
+function extractResumeKeywords(text) {
+  if (!text) return [];
+
+  // Lightweight keyword extraction (NOT AI yet)
+  const keywords = [
+    "engineer",
+    "mechanical",
+    "manufacturing",
+    "robotics",
+    "welding",
+    "cad",
+    "design",
+    "systems",
+    "electronics",
+    "software",
+    "python"
+  ];
+
+  return keywords.filter(k => text.includes(k));
+}
+
+//
+// =============================
+// REAL JOB FETCH (NO FIXED DOMAIN BIAS)
+// =============================
+//
+async function fetchRealJobs(location, query) {
   if (!ADZUNA_APP_ID || !ADZUNA_APP_KEY) {
     throw new Error("Missing API keys");
   }
@@ -99,57 +111,50 @@ async function fetchRealJobs(location, query = "engineering") {
   return data.results.map(job => ({
     title: job.title,
     location: job.location?.display_name || "Unknown",
-
-    // IMPORTANT CHANGE:
-    // no fake skill extraction anymore
-    skills: [],
-
+    skills: [], // intentionally empty for now
     postedDaysAgo: calculateDaysAgo(job.created)
   }));
 }
 
 //
 // =============================
-// DATE HANDLING
+// DATE HELPERS
 // =============================
 //
 function calculateDaysAgo(dateString) {
   const posted = new Date(dateString);
   const now = new Date();
-  const diff = (now - posted) / (1000 * 60 * 60 * 24);
-  return Math.floor(diff);
+  return Math.floor((now - posted) / (1000 * 60 * 60 * 24));
 }
 
 //
 // =============================
-// SCORING ENGINE (CLEAN + CONTROLLED)
+// SCORING ENGINE
 // =============================
 //
 function scoreJob(job, resumeText, userSkills, locationInput, radius, recencyDays) {
   let score = 0;
 
   // -----------------------------
-  // 1. Manual skills input match (PRIMARY TEST SIGNAL)
+  // 1. Manual skills (strongest signal for testing)
   // -----------------------------
   userSkills.forEach(skill => {
-    if (skill && job.skills.includes(skill)) {
+    if (job.skills.includes(skill)) {
       score += 15;
     }
   });
 
   // -----------------------------
-  // 2. Resume keyword match (secondary signal)
+  // 2. Resume keyword match (improved signal)
   // -----------------------------
-  if (resumeText) {
-    job.skills.forEach(skill => {
-      if (resumeText.includes(skill)) {
-        score += 10;
-      }
-    });
-  }
+  job.skills.forEach(skill => {
+    if (resumeText.includes(skill)) {
+      score += 10;
+    }
+  });
 
   // -----------------------------
-  // 3. Location match (basic)
+  // 3. Location match
   // -----------------------------
   if (
     locationInput &&
@@ -159,7 +164,7 @@ function scoreJob(job, resumeText, userSkills, locationInput, radius, recencyDay
   }
 
   // -----------------------------
-  // 4. Radius (placeholder logic)
+  // 4. Radius (still placeholder)
   // -----------------------------
   if (radius >= 50) score += 2;
   if (radius >= 100) score += 4;
@@ -178,7 +183,7 @@ function scoreJob(job, resumeText, userSkills, locationInput, radius, recencyDay
 
 //
 // =============================
-// RENDER RESULTS
+// RENDER TABLE
 // =============================
 //
 function renderTable() {
@@ -186,14 +191,13 @@ function renderTable() {
   tbody.innerHTML = "";
 
   results.forEach(job => {
-    const row = `
+    tbody.innerHTML += `
       <tr>
         <td>${job.title}</td>
         <td>${job.location}</td>
         <td>${job.score}</td>
       </tr>
     `;
-    tbody.innerHTML += row;
   });
 }
 
