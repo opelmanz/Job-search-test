@@ -10,27 +10,46 @@
 
 console.log("APP JS LOADED ✔");
 
-window.onload = function () {
-  console.log("WINDOW LOADED ✔");
+// run immediately when script loads
+setup();
+
+function setup() {
+  console.log("SETUP RUNNING ✔");
 
   const btn = document.querySelector("button");
+  const skills = document.getElementById("skills");
+  const location = document.getElementById("location");
+  const radius = document.getElementById("radius");
+  const preview = document.getElementById("requestPreview");
+
+  console.log("ELEMENT CHECK:", {
+    btn: !!btn,
+    skills: !!skills,
+    location: !!location,
+    radius: !!radius,
+    preview: !!preview
+  });
 
   if (!btn) {
     console.error("BUTTON NOT FOUND ❌");
     return;
   }
 
-  btn.addEventListener("click", () => {
+  btn.onclick = function () {
     console.log("BUTTON CLICKED ✔");
 
-    const skills = document.getElementById("skills")?.value;
-    const location = document.getElementById("location")?.value;
-    const radius = document.getElementById("radius")?.value;
+    const data = {
+      skills: skills?.value || "",
+      location: location?.value || "",
+      radius: radius?.value || ""
+    };
 
-    console.log("INPUT VALUES:", { skills, location, radius });
+    console.log("FORM DATA:", data);
 
-    document.getElementById("requestPreview").textContent =
-      "JS IS WORKING ✔\n\n" +
-      JSON.stringify({ skills, location, radius }, null, 2);
-  });
-};
+    if (preview) {
+      preview.textContent =
+        "WORKING ✔\n\n" +
+        JSON.stringify(data, null, 2);
+    }
+  };
+}
