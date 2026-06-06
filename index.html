@@ -20,7 +20,7 @@
       font-size: 14px;
       font-weight: 500;
     ">
-      Most recent fix = added API debug output panel
+      Most recent fix = fixed API debug output placement
     </div>
 
     <h1>Job Matcher</h1>
@@ -58,6 +58,7 @@
 
     <h2>Results</h2>
 
+    <!-- RESULTS TABLE -->
     <table id="resultsTable">
       <thead>
         <tr>
@@ -71,8 +72,8 @@
       <tbody></tbody>
     </table>
 
-    <!-- DEBUG PANEL -->
-    <h2>Debug Output (Raw API Response)</h2>
+    <!-- DEBUG OUTPUT (RAW API RESPONSE) -->
+    <h2>Raw API Debug Output</h2>
     <pre id="debugOutput" style="
       background: #111;
       color: #0f0;
@@ -81,10 +82,10 @@
       overflow: auto;
       max-height: 300px;
       font-size: 12px;
-      margin-top: 20px;
+      margin-top: 15px;
     "></pre>
 
-    <!-- CSV EXPORT -->
+    <!-- CSV EXPORT (optional tool, does not affect API) -->
     <button onclick="downloadCSV()">Download CSV</button>
 
   </div>
