@@ -34,3 +34,13 @@ th, td {
   border: 1px solid #ddd;
   padding: 8px;
 }
+
+#resume {
+  width: 100%;
+  min-height: 250px;
+  resize: vertical;
+  padding: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  box-sizing: border-box;
+}
