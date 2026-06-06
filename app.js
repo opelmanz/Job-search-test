@@ -1,14 +1,14 @@
 //
 // =============================
-// CONFIG (ADD YOUR KEYS HERE)
+// CONFIG (OPTIONAL API KEYS)
 // =============================
 //
-const ADZUNA_APP_ID = "5df668db";
-const ADZUNA_APP_KEY = "3a8ebf8494b25d4ee83289b29fb84393";
+const ADZUNA_APP_ID = "YOUR_APP_ID";
+const ADZUNA_APP_KEY = "YOUR_APP_KEY";
 
 //
 // =============================
-// FAKE DATA (kept for fallback/testing)
+// FAKE DATA (for fallback only)
 // =============================
 //
 const jobs = [
@@ -36,29 +36,35 @@ let results = [];
 
 //
 // =============================
-// MAIN ENTRY
+// MAIN SEARCH
 // =============================
 //
 async function runSearch() {
   const resumeText = document.getElementById("resume").value.toLowerCase();
+
+  // NEW: manual skills input (your testing control knob)
+  const skillsInput = document.getElementById("skills").value.toLowerCase();
+  const userSkills = skillsInput
+    ? skillsInput.split(",").map(s => s.trim())
+    : [];
+
   const locationInput = document.getElementById("location").value;
   const radius = parseInt(document.getElementById("radius").value) || 50;
   const recencyDays = parseInt(document.getElementById("recency").value) || 7;
 
   let allJobs = [...jobs];
 
-  // Try to fetch real jobs (fails gracefully if API not set)
+  // Try real jobs (safe fallback)
   try {
     const realJobs = await fetchRealJobs(locationInput || "Los Angeles", "engineering");
     allJobs = allJobs.concat(realJobs);
   } catch (err) {
-    console.log("Real job fetch failed or not configured yet:", err);
+    console.log("API not used or failed:", err);
   }
 
-  // Score everything
   results = allJobs.map(job => ({
     ...job,
-    score: scoreJob(job, resumeText, locationInput, radius, recencyDays)
+    score: scoreJob(job, resumeText, userSkills, locationInput, radius, recencyDays)
   }));
 
   results.sort((a, b) => b.score - a.score);
@@ -68,7 +74,7 @@ async function runSearch() {
 
 //
 // =============================
-// REAL JOB FETCH (ADZUNA)
+// REAL JOB FETCH (NO SKILL GUESSING)
 // =============================
 //
 async function fetchRealJobs(location, query = "engineering") {
@@ -93,33 +99,13 @@ async function fetchRealJobs(location, query = "engineering") {
   return data.results.map(job => ({
     title: job.title,
     location: job.location?.display_name || "Unknown",
-    skills: extractSkillsFromText(job.description || ""),
+
+    // IMPORTANT CHANGE:
+    // no fake skill extraction anymore
+    skills: [],
+
     postedDaysAgo: calculateDaysAgo(job.created)
   }));
-}
-
-//
-// =============================
-// SKILL EXTRACTION (simple baseline)
-// =============================
-//
-function extractSkillsFromText(text) {
-  const keywords = [
-    "welding",
-    "cad",
-    "robotics",
-    "manufacturing",
-    "engineering",
-    "mechanical",
-    "python",
-    "design",
-    "systems",
-    "electronics"
-  ];
-
-  const lower = text.toLowerCase();
-
-  return keywords.filter(skill => lower.includes(skill));
 }
 
 //
@@ -136,20 +122,35 @@ function calculateDaysAgo(dateString) {
 
 //
 // =============================
-// SCORING ENGINE
+// SCORING ENGINE (CLEAN + CONTROLLED)
 // =============================
 //
-function scoreJob(job, resumeText, locationInput, radius, recencyDays) {
+function scoreJob(job, resumeText, userSkills, locationInput, radius, recencyDays) {
   let score = 0;
 
-  // Resume skill match
-  job.skills.forEach(skill => {
-    if (resumeText.includes(skill)) {
+  // -----------------------------
+  // 1. Manual skills input match (PRIMARY TEST SIGNAL)
+  // -----------------------------
+  userSkills.forEach(skill => {
+    if (skill && job.skills.includes(skill)) {
       score += 15;
     }
   });
 
-  // Location match (basic)
+  // -----------------------------
+  // 2. Resume keyword match (secondary signal)
+  // -----------------------------
+  if (resumeText) {
+    job.skills.forEach(skill => {
+      if (resumeText.includes(skill)) {
+        score += 10;
+      }
+    });
+  }
+
+  // -----------------------------
+  // 3. Location match (basic)
+  // -----------------------------
   if (
     locationInput &&
     job.location.toLowerCase().includes(locationInput.toLowerCase())
@@ -157,11 +158,15 @@ function scoreJob(job, resumeText, locationInput, radius, recencyDays) {
     score += 10;
   }
 
-  // Radius (placeholder logic for now)
+  // -----------------------------
+  // 4. Radius (placeholder logic)
+  // -----------------------------
   if (radius >= 50) score += 2;
   if (radius >= 100) score += 4;
 
-  // Recency scoring
+  // -----------------------------
+  // 5. Recency filter
+  // -----------------------------
   if (job.postedDaysAgo <= recencyDays) {
     score += 8;
   } else {
@@ -173,7 +178,7 @@ function scoreJob(job, resumeText, locationInput, radius, recencyDays) {
 
 //
 // =============================
-// RENDER TABLE
+// RENDER RESULTS
 // =============================
 //
 function renderTable() {
