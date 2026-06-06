@@ -18,7 +18,7 @@
       margin-bottom:15px;
       font-size:14px;
     ">
-      Major debug 1:24pm
+      Debug 1:27pm
     </div>
 
     <h1>Job Matcher</h1>
@@ -27,15 +27,15 @@
     <label><strong>Skills</strong></label>
     <input id="skills" placeholder="e.g. welding, robotics, python, cad" />
 
-    <!-- LOCATION -->
+    <!-- LOCATION (DEFAULT FILLED) -->
     <label><strong>Location (City, State)</strong></label>
-    <input id="location" placeholder="e.g. Los Angeles, CA" />
+    <input id="location" value="Los Angeles, CA" />
 
-    <!-- DISTANCE -->
+    <!-- DISTANCE (DEFAULT FILLED) -->
     <label><strong>Distance (miles)</strong></label>
-    <input id="radius" type="number" placeholder="e.g. 10, 25, 50" />
+    <input id="radius" type="number" value="100" />
 
-    <!-- RECENCY -->
+    <!-- RECENCY (DEFAULT FILLED) -->
     <label><strong>Posted Within</strong></label>
     <select id="recency">
       <option value="1">Within 24 hours</option>
@@ -44,7 +44,7 @@
       <option value="7">Within past 1 week</option>
       <option value="14">Within past 2 weeks</option>
       <option value="21">Within past 3 weeks</option>
-      <option value="28">Within past 4 weeks</option>
+      <option value="28" selected>Within past 4 weeks</option>
     </select>
 
     <!-- REQUEST DEBUG -->
