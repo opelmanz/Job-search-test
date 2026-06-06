@@ -13,29 +13,34 @@
     <!-- VERSION -->
     <div style="
       background:#222;
-      color:white;
+      color:#fff;
       padding:10px 14px;
       border-radius:8px;
       margin-bottom:15px;
       font-size:14px;
     ">
-      Most recent fix = fix resume parsing - currently not working 
+      Debug Mode = API request inspector enabled
     </div>
 
     <h1>Job Matcher</h1>
 
+    <!-- RESUME -->
     <label><strong>Resume</strong></label>
     <textarea id="resume" placeholder="Paste your resume here..."></textarea>
 
+    <!-- SKILLS -->
     <label><strong>Skills</strong></label>
     <input id="skills" placeholder="e.g. welding, cad, python" />
 
+    <!-- LOCATION -->
     <label><strong>Location (City, State)</strong></label>
     <input id="location" placeholder="e.g. Los Angeles, CA" />
 
+    <!-- DISTANCE -->
     <label><strong>Distance (miles)</strong></label>
     <input id="radius" type="number" placeholder="e.g. 25" />
 
+    <!-- RECENCY -->
     <label><strong>Posted Within</strong></label>
     <select id="recency">
       <option value="1">Within 24 hours</option>
@@ -47,6 +52,19 @@
       <option value="28">Within past 4 weeks</option>
     </select>
 
+    <!-- 🔥 NEW DEBUG BOX (WHAT IS SENT TO API) -->
+    <h3>API Request Preview</h3>
+    <pre id="requestPreview" style="
+      background:#111;
+      color:#0ff;
+      padding:10px;
+      border-radius:8px;
+      font-size:12px;
+      max-height:160px;
+      overflow:auto;
+    "></pre>
+
+    <!-- BUTTON -->
     <button onclick="runSearch()">Find Jobs</button>
 
     <h2>Results</h2>
@@ -64,15 +82,15 @@
       <tbody></tbody>
     </table>
 
-    <h2>Raw API Debug</h2>
+    <h3>Raw API Response</h3>
     <pre id="debugOutput" style="
       background:#111;
       color:#0f0;
       padding:10px;
       border-radius:8px;
+      font-size:12px;
       max-height:300px;
       overflow:auto;
-      font-size:12px;
     "></pre>
 
   </div>
