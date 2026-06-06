@@ -48,3 +48,15 @@ th, td {
 #radius {
   width: 100px;
 }
+button {
+  display: block;
+  margin: 20px auto;
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  background-color: #2d6cdf;
+  color: white;
+}
