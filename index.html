@@ -14,25 +14,27 @@
     <p>Paste your resume:</p>
     <textarea id="resume" placeholder="Paste your resume here..."></textarea>
 
+    <p>Skills (for testing — comma separated):</p>
+    <input id="skills" placeholder="e.g. welding, cad, robotics" />
+
     <p>Job preferences:</p>
 
     <input id="location" placeholder="City, State (e.g. Los Angeles, CA)" />
 
     <label>Distance from desired city (miles):</label>
-<input id="radius" type="number" placeholder="e.g. 25" min="0" />
+    <input id="radius" type="number" placeholder="e.g. 25" min="0" />
 
-<label>Job posting age:</label>
-<select id="recency">
-  <option value="1">Within 24 hours</option>
-  <option value="2">Within 48 hours</option>
-  <option value="3">Within 72 hours</option>
-  <option value="7">Within past 1 week</option>
-  <option value="14">Within past 2 weeks</option>
-  <option value="21">Within past 3 weeks</option>
-  <option value="28">Within past 4 weeks</option>
-</select>
+    <label>Job posting age:</label>
+    <select id="recency">
+      <option value="1">Within 24 hours</option>
+      <option value="2">Within 48 hours</option>
+      <option value="3">Within 72 hours</option>
+      <option value="7">Within past 1 week</option>
+      <option value="14">Within past 2 weeks</option>
+      <option value="21">Within past 3 weeks</option>
+      <option value="28">Within past 4 weeks</option>
+    </select>
 
-    
     <button onclick="runSearch()">Find Jobs</button>
 
     <h2>Results</h2>
