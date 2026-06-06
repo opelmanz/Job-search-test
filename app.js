@@ -10,87 +10,105 @@ let results = [];
 
 //
 // =====================
-// MAIN ENTRY
+// ENTRY
 // =====================
 //
 async function runSearch() {
   console.log("RUN SEARCH");
 
-  const resumeText = document.getElementById("resume").value || "";
   const skillsRaw = document.getElementById("skills").value || "";
   const location = document.getElementById("location").value || "Los Angeles";
+  const radius = parseInt(document.getElementById("radius").value) || 0;
   const recency = parseInt(document.getElementById("recency").value) || 7;
 
-  const skills = skillsRaw
-    .toLowerCase()
-    .split(",")
-    .map(s => s.trim())
-    .filter(Boolean);
+  const skills = parseSkills(skillsRaw);
+  const query = buildQuery(skills);
 
-  const query = buildQuery(resumeText, skills);
+  const locations = expandLocation(location, radius);
 
-  console.log("FINAL QUERY:", query);
+  document.getElementById("requestPreview").textContent = JSON.stringify({
+    skills,
+    query,
+    baseLocation: location,
+    radius,
+    expandedLocations: locations
+  }, null, 2);
 
-  const jobs = await fetchJobs(location, query, recency);
+  let all = [];
 
-  results = jobs;
+  try {
+    for (const loc of locations) {
+      const url = buildUrl(loc, query, recency);
+      const data = await fetchJobs(url);
+
+      all = all.concat(data);
+    }
+
+    results = dedupe(all);
+
+  } catch (err) {
+    console.error("API ERROR:", err);
+    results = [];
+  }
 
   render();
 }
 
 //
 // =====================
-// QUERY BUILDER
+// SKILLS
 // =====================
 //
-function buildQuery(resume, skills) {
-  const resumeWords = extractWords(resume);
+function parseSkills(input) {
+  return input
+    .toLowerCase()
+    .split(",")
+    .map(s => s.trim())
+    .filter(Boolean);
+}
 
-  const combined = [...skills, resumeWords]
-    .filter(Boolean)
-    .join(" ");
-
-  // HARD LIMIT: prevents API breakage from long resumes
-  return combined.split(" ").slice(0, 35).join(" ");
+function buildQuery(skills) {
+  return skills.slice(0, 8).join(" ");
 }
 
 //
 // =====================
-// RESUME PARSER (FIXED)
+// DISTANCE LOGIC
 // =====================
 //
-function extractWords(text) {
-  if (!text) return "";
+function expandLocation(base, radius) {
+  if (!radius || radius <= 0) return [base];
 
-  const cleaned = text
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, " ")
-    .replace(/\s+/g, " ");
+  const loc = base.toLowerCase();
 
-  const words = cleaned.split(" ");
+  const map = {
+    "los angeles": [
+      "Los Angeles",
+      "Long Beach",
+      "Pasadena",
+      "Anaheim",
+      "Glendale",
+      "Santa Monica"
+    ],
+    "new york": [
+      "New York",
+      "Brooklyn",
+      "Jersey City",
+      "Newark"
+    ],
+    "san francisco": [
+      "San Francisco",
+      "Oakland",
+      "Berkeley",
+      "San Jose"
+    ]
+  };
 
-  const stop = new Set([
-    "the","and","to","of","in","a","for","with","on","at",
-    "by","is","it","this","that","was","were","be","as","are",
-    "from","or","have","has","had","i","you","we","they",
-    "responsible","experience","worked","working","manage","managed"
-  ]);
-
-  const filtered = words.filter(w =>
-    w && w.length > 2 && !stop.has(w)
-  );
-
-  // frequency weighting (critical fix)
-  const freq = {};
-  for (const w of filtered) {
-    freq[w] = (freq[w] || 0) + 1;
+  for (const key in map) {
+    if (loc.includes(key)) return map[key];
   }
 
-  return Object.entries(freq)
-    .sort((a, b) => b[1] - a[1])
-    .map(([w]) => w)
-    .slice(0, 25)
-    .join(" ");
+  return [base];
 }
 
 //
@@ -98,71 +116,70 @@ function extractWords(text) {
 // API CALL
 // =====================
 //
-async function fetchJobs(location, query, recency) {
-  console.log("FETCHING API");
-
-  const url =
-    `https://api.adzuna.com/v1/api/jobs/us/search/1` +
-    `?app_id=${ADZUNA_APP_ID}` +
-    `&app_key=${ADZUNA_APP_KEY}` +
-    `&what=${encodeURIComponent(query)}` +
-    `&where=${encodeURIComponent(location)}` +
-    `&max_days_old=${recency}` +
-    `&results_per_page=10`;
-
-  console.log("URL:", url);
-
+async function fetchJobs(url) {
   const res = await fetch(url);
+
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
+
   const data = await res.json();
 
-  console.log("API RESPONSE:", data);
-
-  // DEBUG OUTPUT (safe)
-  const debug = document.getElementById("debugOutput");
-  if (debug) {
-    debug.textContent = JSON.stringify(data, null, 2);
-  }
+  document.getElementById("debugOutput").textContent =
+    JSON.stringify(data, null, 2);
 
   if (!data.results) return [];
 
   return data.results.map(j => ({
     title: j.title,
     employer: j.company?.display_name || "Unknown",
-    location: formatLocation(j.location?.display_name || ""),
-    posted: new Date(j.created).toLocaleDateString(),
+    location: j.location?.display_name || "Unknown",
+    posted: j.created ? new Date(j.created).toLocaleDateString() : "Unknown",
     link: j.redirect_url || "#"
   }));
 }
 
 //
 // =====================
-// LOCATION FORMAT (simple + stable)
+// URL BUILDER
 // =====================
 //
-function formatLocation(str) {
-  if (!str) return "Unknown";
-
-  const parts = str.split(",").map(p => p.trim());
-
-  const city = parts[0] || "";
-  const state = parts[1] ? parts[1].slice(0, 2).toUpperCase() : "";
-
-  return state ? `${city}, ${state}` : city;
+function buildUrl(location, query, recency) {
+  return (
+    `https://api.adzuna.com/v1/api/jobs/us/search/1` +
+    `?app_id=${ADZUNA_APP_ID}` +
+    `&app_key=${ADZUNA_APP_KEY}` +
+    `&what=${encodeURIComponent(query)}` +
+    `&where=${encodeURIComponent(location)}` +
+    `&max_days_old=${recency}` +
+    `&results_per_page=10`
+  );
 }
 
 //
 // =====================
-// RENDER TABLE
+// DEDUPE
+// =====================
+//
+function dedupe(jobs) {
+  const seen = new Set();
+
+  return jobs.filter(j => {
+    const key = j.title + j.employer + j.location;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+//
+// =====================
+// RENDER
 // =====================
 //
 function render() {
   const tbody = document.querySelector("#resultsTable tbody");
   tbody.innerHTML = "";
-
-  if (!results || results.length === 0) {
-    console.warn("NO RESULTS");
-    return;
-  }
 
   for (const j of results) {
     tbody.innerHTML += `
@@ -174,5 +191,7 @@ function render() {
         <td><a href="${j.link}" target="_blank">View</a></td>
       </tr>
     `;
+  }
+}
   }
 }
