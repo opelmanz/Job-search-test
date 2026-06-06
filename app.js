@@ -47,12 +47,12 @@ async function runSearch() {
 
 //
 // =============================
-// QUERY BUILDER (UPDATED)
+// QUERY BUILDER
 // =============================
 //
 function buildQuery(resumeText, skills) {
-  const skillSignal = buildSkillSignal(skills);
-  const resumeSignal = extractResumeSignals(resumeText);
+  const resumeSignal = extractResumeKeywords(resumeText);
+  const skillSignal = skills.join(" ");
 
   return [skillSignal, resumeSignal]
     .filter(Boolean)
@@ -62,67 +62,12 @@ function buildQuery(resumeText, skills) {
 
 //
 // =============================
-// SKILLS (HIGHEST PRIORITY)
+// RESUME KEYWORD EXTRACTION
 // =============================
 //
-function buildSkillSignal(skills) {
-  // keep full user input as strongest signal
-  return skills.join(" ");
-}
-
-//
-// =============================
-// RESUME SIGNAL EXTRACTION
-// =============================
-//
-function extractResumeSignals(text) {
+function extractResumeKeywords(text) {
   if (!text) return "";
 
-  const sections = splitIntoSections(text);
-
-  const recentRoles = extractRecentRoles(sections);
-  const resumeKeywords = extractKeywords(text, 40);
-
-  return [
-    recentRoles,
-    resumeKeywords
-  ]
-    .filter(Boolean)
-    .join(" ");
-}
-
-//
-// =============================
-// SPLIT INTO ROUGH "POSITIONS"
-// =============================
-// (heuristic, not perfect but useful)
-// =============================
-//
-function splitIntoSections(text) {
-  // try splitting by common resume delimiters
-  return text
-    .split(/\n(?=[A-Z][a-z]+\s|Experience|EXPERIENCE|Work|WORK|Employment)/)
-    .slice(0, 5);
-}
-
-//
-// =============================
-// EXTRACT RECENT ROLES
-// =============================
-//
-function extractRecentRoles(sections) {
-  return sections
-    .slice(0, 5)
-    .map(sec => extractKeywords(sec, 10))
-    .join(" ");
-}
-
-//
-// =============================
-// KEYWORD EXTRACTION
-// =============================
-//
-function extractKeywords(text, limit) {
   const cleaned = text.toLowerCase().replace(/[^a-z0-9\s]/g, " ");
   const words = cleaned.split(/\s+/).filter(Boolean);
 
@@ -134,12 +79,13 @@ function extractKeywords(text, limit) {
 
   const filtered = words.filter(w => w.length > 2 && !stopWords.has(w));
 
-  return filtered.slice(0, limit).join(" ");
+  // keep more signal without truncating too aggressively
+  return filtered.slice(0, 40).join(" ");
 }
 
 //
 // =============================
-// API
+// API CALL
 // =============================
 //
 async function fetchRealJobs(location, query, recencyDays) {
@@ -156,6 +102,8 @@ async function fetchRealJobs(location, query, recencyDays) {
   const res = await fetch(url);
   const data = await res.json();
 
+  console.log("ADZUNA RESPONSE:", data);
+
   if (!data.results) return [];
 
   return data.results.map(job => ({
@@ -169,7 +117,7 @@ async function fetchRealJobs(location, query, recencyDays) {
 
 //
 // =============================
-// FORMAT HELPERS
+// FIXED LOCATION PARSER (IMPORTANT FIX)
 // =============================
 //
 function formatLocation(str) {
@@ -191,24 +139,33 @@ function formatLocation(str) {
 
   const parts = str.split(",").map(p => p.trim());
 
-  const city = parts[0] || "";
-
+  let city = parts[0] || "";
   let state = "";
 
-  if (parts[1]) {
-    const raw = parts[1].toLowerCase().trim();
+  for (let i = 1; i < parts.length; i++) {
+    const p = parts[i].toLowerCase().trim();
 
-    // already abbreviation (CA, NY, etc.)
-    if (raw.length === 2) {
-      state = raw.toUpperCase();
-    } else {
-      state = US_STATES[raw] || "";
+    // already abbreviation
+    if (/^[a-z]{2}$/.test(p)) {
+      state = p.toUpperCase();
+      break;
+    }
+
+    // full state name
+    if (US_STATES[p]) {
+      state = US_STATES[p];
+      break;
     }
   }
 
   return state ? `${city}, ${state}` : city;
 }
 
+//
+// =============================
+// DATE FORMAT
+// =============================
+//
 function formatDate(dateStr) {
   if (!dateStr) return "Unknown";
   return new Date(dateStr).toLocaleDateString();
