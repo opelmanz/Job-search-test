@@ -10,39 +10,33 @@
 
   <div class="container">
 
-    <!-- VERSION BANNER -->
+    <!-- VERSION -->
     <div style="
-      background: #222;
-      color: #fff;
-      padding: 10px 15px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-      font-size: 14px;
-      font-weight: 500;
+      background:#222;
+      color:white;
+      padding:10px 14px;
+      border-radius:8px;
+      margin-bottom:15px;
+      font-size:14px;
     ">
-      Most recent fix = fixed API debug output placement
+      Most recent fix = stable API debug output + full reset
     </div>
 
     <h1>Job Matcher</h1>
 
-    <!-- RESUME -->
-    <label for="resume"><strong>Resume</strong></label>
+    <label><strong>Resume</strong></label>
     <textarea id="resume" placeholder="Paste your resume here..."></textarea>
 
-    <!-- SKILLS -->
-    <label for="skills"><strong>Skills</strong></label>
-    <input id="skills" placeholder="e.g. welding, cad, robotics, python" />
+    <label><strong>Skills</strong></label>
+    <input id="skills" placeholder="e.g. welding, cad, python" />
 
-    <!-- LOCATION -->
-    <label for="location"><strong>Location (City, State)</strong></label>
+    <label><strong>Location (City, State)</strong></label>
     <input id="location" placeholder="e.g. Los Angeles, CA" />
 
-    <!-- DISTANCE -->
-    <label for="radius"><strong>Distance (miles)</strong></label>
+    <label><strong>Distance (miles)</strong></label>
     <input id="radius" type="number" placeholder="e.g. 25" />
 
-    <!-- RECENCY -->
-    <label for="recency"><strong>Posted Within</strong></label>
+    <label><strong>Posted Within</strong></label>
     <select id="recency">
       <option value="1">Within 24 hours</option>
       <option value="2">Within 48 hours</option>
@@ -53,40 +47,33 @@
       <option value="28">Within past 4 weeks</option>
     </select>
 
-    <!-- SEARCH BUTTON -->
     <button onclick="runSearch()">Find Jobs</button>
 
     <h2>Results</h2>
 
-    <!-- RESULTS TABLE -->
     <table id="resultsTable">
       <thead>
         <tr>
           <th>Job Title</th>
           <th>Employer</th>
           <th>Location</th>
-          <th>Posted Date</th>
+          <th>Posted</th>
           <th>Link</th>
         </tr>
       </thead>
       <tbody></tbody>
     </table>
 
-    <!-- DEBUG OUTPUT (RAW API RESPONSE) -->
-    <h2>Raw API Debug Output</h2>
+    <h2>Raw API Debug</h2>
     <pre id="debugOutput" style="
-      background: #111;
-      color: #0f0;
-      padding: 10px;
-      border-radius: 8px;
-      overflow: auto;
-      max-height: 300px;
-      font-size: 12px;
-      margin-top: 15px;
+      background:#111;
+      color:#0f0;
+      padding:10px;
+      border-radius:8px;
+      max-height:300px;
+      overflow:auto;
+      font-size:12px;
     "></pre>
-
-    <!-- CSV EXPORT (optional tool, does not affect API) -->
-    <button onclick="downloadCSV()">Download CSV</button>
 
   </div>
 
