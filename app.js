@@ -25,26 +25,10 @@ async function runSearch() {
   const radius = parseInt(document.getElementById("radius").value) || 50;
   const recencyDays = parseInt(document.getElementById("recency").value) || 7;
 
-  // -----------------------------
-  // BUILD COMBINED SEARCH QUERY
-  // -----------------------------
-  const resumeQuery = extractResumeQuery(resumeText);
-
-  const skillsQuery = userSkills.length > 0
-    ? userSkills.join(" ")
-    : "";
-
-  // Combined query = resume intent + explicit skills
-  const searchQuery = [resumeQuery, skillsQuery]
-    .filter(Boolean)
-    .join(" ")
-    .trim() || "jobs";
+  const searchQuery = extractResumeQuery(resumeText);
 
   let allJobs = [];
 
-  // -----------------------------
-  // FETCH JOBS
-  // -----------------------------
   try {
     const realJobs = await fetchRealJobs(
       locationInput || "Los Angeles",
@@ -56,9 +40,6 @@ async function runSearch() {
     console.log("API failed:", err);
   }
 
-  // -----------------------------
-  // SCORE JOBS
-  // -----------------------------
   results = allJobs.map(job => ({
     ...job,
     score: scoreJob(job, resumeText, userSkills, locationInput, radius, recencyDays)
@@ -71,11 +52,11 @@ async function runSearch() {
 
 //
 // =============================
-// RESUME QUERY EXTRACTION (neutral)
+// RESUME QUERY EXTRACTION
 // =============================
 //
 function extractResumeQuery(text) {
-  if (!text) return "";
+  if (!text) return "jobs";
 
   const cleaned = text
     .toLowerCase()
@@ -98,12 +79,12 @@ function extractResumeQuery(text) {
 
   return Object.entries(freq)
     .sort((a, b) => b[1] - a[1])
-    .map(x => x[0])[0] || "";
+    .map(x => x[0])[0] || "jobs";
 }
 
 //
 // =============================
-// ADZUNA API CALL
+// ADZUNA API
 // =============================
 //
 async function fetchRealJobs(location, query) {
@@ -122,12 +103,12 @@ async function fetchRealJobs(location, query) {
 
   const response = await fetch(url);
   const data = await response.json();
-  console.log("ADZUNA RAW RESPONSE:", data);
 
   if (!data.results) return [];
 
   return data.results.map(job => ({
     title: job.title,
+    employer: job.company?.display_name || "Unknown",
     location: job.location?.display_name || "Unknown",
     skills: [],
     postedDaysAgo: calculateDaysAgo(job.created)
@@ -136,7 +117,7 @@ async function fetchRealJobs(location, query) {
 
 //
 // =============================
-// DATE HELP
+// DATE UTILITY
 // =============================
 //
 function calculateDaysAgo(dateString) {
@@ -154,15 +135,11 @@ function scoreJob(job, resumeText, userSkills, locationInput, radius, recencyDay
   let score = 0;
 
   userSkills.forEach(skill => {
-    if (job.skills.includes(skill)) {
-      score += 15;
-    }
+    if (job.skills.includes(skill)) score += 15;
   });
 
   job.skills.forEach(skill => {
-    if (resumeText.includes(skill)) {
-      score += 10;
-    }
+    if (resumeText.includes(skill)) score += 10;
   });
 
   if (
@@ -186,7 +163,7 @@ function scoreJob(job, resumeText, userSkills, locationInput, radius, recencyDay
 
 //
 // =============================
-// RENDER TABLE
+// RENDER TABLE (UPDATED COLUMN)
 // =============================
 //
 function renderTable() {
@@ -197,6 +174,7 @@ function renderTable() {
     tbody.innerHTML += `
       <tr>
         <td>${job.title}</td>
+        <td>${job.employer}</td>
         <td>${job.location}</td>
         <td>${job.score}</td>
       </tr>
@@ -206,14 +184,14 @@ function renderTable() {
 
 //
 // =============================
-// CSV EXPORT
+// CSV EXPORT (UPDATED COLUMN)
 // =============================
 //
 function downloadCSV() {
-  let csv = "Title,Location,Score\n";
+  let csv = "Title,Employer,Location,Score\n";
 
   results.forEach(job => {
-    csv += `${job.title},${job.location},${job.score}\n`;
+    csv += `${job.title},${job.employer},${job.location},${job.score}\n`;
   });
 
   const blob = new Blob([csv], { type: "text/csv" });
