@@ -9,7 +9,9 @@ const ADZUNA_APP_KEY = "3a8ebf8494b25d4ee83289b29fb84393";
 let results = [];
 
 //
+// =============================
 // MAIN SEARCH
+// =============================
 //
 async function runSearch() {
   const resumeText = document.getElementById("resume").value.toLowerCase();
@@ -20,13 +22,23 @@ async function runSearch() {
     : [];
 
   const locationInput = document.getElementById("location").value;
+  const radius = parseInt(document.getElementById("radius").value) || 50;
+  const recencyDays = parseInt(document.getElementById("recency").value) || 7;
 
+  // -----------------------------
+  // Build search query (resume + skills)
+  // -----------------------------
   const searchQuery = buildQuery(resumeText, userSkills);
 
   let allJobs = [];
 
   try {
-    const jobs = await fetchRealJobs(locationInput || "Los Angeles", searchQuery);
+    const jobs = await fetchRealJobs(
+      locationInput || "Los Angeles",
+      searchQuery,
+      recencyDays
+    );
+
     allJobs = allJobs.concat(jobs);
   } catch (err) {
     console.log("API failed:", err);
@@ -38,20 +50,24 @@ async function runSearch() {
 }
 
 //
+// =============================
 // BUILD QUERY FROM RESUME + SKILLS
+// =============================
 //
 function buildQuery(resumeText, skills) {
-  const resumeWords = extractWords(resumeText);
-  const skillWords = skills.join(" ");
+  const resumeQuery = extractWords(resumeText);
+  const skillsQuery = skills.join(" ");
 
-  return [resumeWords, skillWords]
+  return [resumeQuery, skillsQuery]
     .filter(Boolean)
     .join(" ")
     .trim() || "jobs";
 }
 
 //
-// BASIC TEXT PARSER
+// =============================
+// SIMPLE TEXT PARSER
+// =============================
 //
 function extractWords(text) {
   if (!text) return "";
@@ -61,7 +77,8 @@ function extractWords(text) {
 
   const stopWords = new Set([
     "the","and","to","of","in","a","for","with","on","at",
-    "by","an","is","it","this","that","i","you","we","they"
+    "by","an","is","it","this","that","i","you","we","they",
+    "was","were","be","as","are","from","or","have","has","had"
   ]);
 
   return words
@@ -71,30 +88,33 @@ function extractWords(text) {
 }
 
 //
-// API CALL
+// =============================
+// ADZUNA API CALL (RECENCY FIXED)
+// =============================
 //
-async function fetchRealJobs(location, query) {
+async function fetchRealJobs(location, query, recencyDays) {
   const url =
     `https://api.adzuna.com/v1/api/jobs/us/search/1` +
     `?app_id=${ADZUNA_APP_ID}` +
     `&app_key=${ADZUNA_APP_KEY}` +
     `&what=${encodeURIComponent(query)}` +
     `&where=${encodeURIComponent(location)}` +
+    `&max_days_old=${recencyDays}` +
     `&results_per_page=10` +
     `&content-type=application/json`;
 
   const res = await fetch(url);
   const data = await res.json();
 
+  console.log("ADZUNA RESPONSE:", data);
+
   if (!data.results) return [];
 
   return data.results.map(job => {
-    const loc = formatLocation(job.location?.display_name || "");
-
     return {
       title: job.title,
       employer: job.company?.display_name || "Unknown",
-      location: loc,
+      location: formatLocation(job.location?.display_name || ""),
       posted: formatDate(job.created),
       link: job.redirect_url || "#"
     };
@@ -102,7 +122,9 @@ async function fetchRealJobs(location, query) {
 }
 
 //
+// =============================
 // FORMAT LOCATION (City, ST)
+// =============================
 //
 function formatLocation(str) {
   if (!str) return "Unknown";
@@ -116,15 +138,21 @@ function formatLocation(str) {
 }
 
 //
+// =============================
 // FORMAT DATE
+// =============================
 //
 function formatDate(dateStr) {
+  if (!dateStr) return "Unknown";
+
   const d = new Date(dateStr);
   return d.toLocaleDateString();
 }
 
 //
+// =============================
 // RENDER TABLE
+// =============================
 //
 function renderTable() {
   const tbody = document.querySelector("#resultsTable tbody");
@@ -144,7 +172,9 @@ function renderTable() {
 }
 
 //
+// =============================
 // CSV EXPORT
+// =============================
 //
 function downloadCSV() {
   let csv = "Title,Employer,Location,Posted,Link\n";
