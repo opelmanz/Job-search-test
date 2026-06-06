@@ -10,7 +10,6 @@
 
   <div class="container">
 
-    <!-- VERSION -->
     <div style="
       background:#222;
       color:#fff;
@@ -19,18 +18,14 @@
       margin-bottom:15px;
       font-size:14px;
     ">
-      Debug Mode = API request inspector enabled V2
+      Skills + Distance Mode (resume removed)
     </div>
 
     <h1>Job Matcher</h1>
 
-    <!-- RESUME -->
-    <label><strong>Resume</strong></label>
-    <textarea id="resume" placeholder="Paste your resume here..."></textarea>
-
     <!-- SKILLS -->
     <label><strong>Skills</strong></label>
-    <input id="skills" placeholder="e.g. welding, cad, python" />
+    <input id="skills" placeholder="e.g. welding, robotics, python, cad" />
 
     <!-- LOCATION -->
     <label><strong>Location (City, State)</strong></label>
@@ -38,7 +33,7 @@
 
     <!-- DISTANCE -->
     <label><strong>Distance (miles)</strong></label>
-    <input id="radius" type="number" placeholder="e.g. 25" />
+    <input id="radius" type="number" placeholder="e.g. 10, 25, 50" />
 
     <!-- RECENCY -->
     <label><strong>Posted Within</strong></label>
@@ -52,7 +47,7 @@
       <option value="28">Within past 4 weeks</option>
     </select>
 
-    <!-- 🔥 NEW DEBUG BOX (WHAT IS SENT TO API) -->
+    <!-- REQUEST DEBUG -->
     <h3>API Request Preview</h3>
     <pre id="requestPreview" style="
       background:#111;
@@ -64,7 +59,6 @@
       overflow:auto;
     "></pre>
 
-    <!-- BUTTON -->
     <button onclick="runSearch()">Find Jobs</button>
 
     <h2>Results</h2>
