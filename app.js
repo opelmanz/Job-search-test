@@ -8,11 +8,6 @@ const ADZUNA_APP_KEY = "3a8ebf8494b25d4ee83289b29fb84393";
 
 let results = [];
 
-const ADZUNA_APP_ID = "PASTE_YOUR_APP_ID";
-const ADZUNA_APP_KEY = "PASTE_YOUR_APP_KEY";
-
-let results = [];
-
 //
 // =====================
 // MAIN ENTRY
