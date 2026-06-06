@@ -3,220 +3,34 @@
 // CONFIG (OPTIONAL API KEYS)
 // =============================
 //
-const ADZUNA_APP_ID = "5df668db";
-const ADZUNA_APP_KEY = "3a8ebf8494b25d4ee83289b29fb84393";
+//const ADZUNA_APP_ID = "5df668db";
+//const ADZUNA_APP_KEY = "3a8ebf8494b25d4ee83289b29fb84393";
 
-let results = [];
+//let results = [];
 
-//
-// =====================
-// MAIN ENTRY
-// =====================
-//
-async function runSearch() {
-  console.log("RUN SEARCH FIRED");
+console.log("APP JS LOADED ✔");
 
-  try {
-    const skillsRaw = document.getElementById("skills").value || "";
-    const location = document.getElementById("location").value || "Los Angeles";
-    const radius = parseInt(document.getElementById("radius").value) || 0;
-    const recency = parseInt(document.getElementById("recency").value) || 7;
+window.onload = function () {
+  console.log("WINDOW LOADED ✔");
 
-    const skills = parseSkills(skillsRaw);
-    const query = buildQuery(skills);
+  const btn = document.querySelector("button");
 
-    const locations = expandLocation(location, radius);
-
-    console.log("INPUT:", { skills, location, radius, recency });
-    console.log("QUERY:", query);
-    console.log("EXPANDED LOCATIONS:", locations);
-
-    document.getElementById("requestPreview").textContent = JSON.stringify({
-      skills,
-      query,
-      location,
-      radius,
-      expandedLocations: locations,
-      recency
-    }, null, 2);
-
-    let allResults = [];
-
-    for (const loc of locations) {
-      console.log("FETCHING:", loc);
-
-      const url = buildUrl(loc, query, recency);
-      console.log("URL:", url);
-
-      const data = await fetchJobs(url);
-
-      console.log("RESULTS FROM LOCATION:", loc, data.length);
-
-      allResults = allResults.concat(data);
-    }
-
-    results = dedupe(allResults);
-
-    console.log("TOTAL RESULTS:", results.length);
-
-    render();
-
-  } catch (err) {
-    console.error("RUN SEARCH ERROR:", err);
-  }
-}
-
-//
-// =====================
-// SKILLS
-// =====================
-//
-function parseSkills(input) {
-  return input
-    .toLowerCase()
-    .split(",")
-    .map(s => s.trim())
-    .filter(Boolean);
-}
-
-//
-// =====================
-// QUERY BUILDER
-// =====================
-//
-function buildQuery(skills) {
-  // simple, stable, predictable
-  return skills.slice(0, 8).join(" ");
-}
-
-//
-// =====================
-// DISTANCE EXPANSION
-// =====================
-//
-function expandLocation(base, radius) {
-  if (!radius || radius <= 0) return [base];
-
-  const loc = base.toLowerCase();
-
-  const map = {
-    "los angeles": [
-      "Los Angeles",
-      "Long Beach",
-      "Pasadena",
-      "Anaheim",
-      "Glendale",
-      "Santa Monica"
-    ],
-    "new york": [
-      "New York",
-      "Brooklyn",
-      "Jersey City",
-      "Newark"
-    ],
-    "san francisco": [
-      "San Francisco",
-      "Oakland",
-      "Berkeley",
-      "San Jose"
-    ]
-  };
-
-  for (const key in map) {
-    if (loc.includes(key)) {
-      return map[key];
-    }
-  }
-
-  return [base];
-}
-
-//
-// =====================
-// API CALL
-// =====================
-//
-async function fetchJobs(url) {
-  const res = await fetch(url);
-
-  if (!res.ok) {
-    throw new Error(`HTTP ERROR ${res.status}`);
-  }
-
-  const data = await res.json();
-
-  document.getElementById("debugOutput").textContent =
-    JSON.stringify(data, null, 2);
-
-  if (!data.results) return [];
-
-  return data.results.map(job => ({
-    title: job.title,
-    employer: job.company?.display_name || "Unknown",
-    location: job.location?.display_name || "Unknown",
-    posted: job.created
-      ? new Date(job.created).toLocaleDateString()
-      : "Unknown",
-    link: job.redirect_url || "#"
-  }));
-}
-
-//
-// =====================
-// URL BUILDER
-// =====================
-//
-function buildUrl(location, query, recency) {
-  return (
-    `https://api.adzuna.com/v1/api/jobs/us/search/1` +
-    `?app_id=${ADZUNA_APP_ID}` +
-    `&app_key=${ADZUNA_APP_KEY}` +
-    `&what=${encodeURIComponent(query)}` +
-    `&where=${encodeURIComponent(location)}` +
-    `&max_days_old=${recency}` +
-    `&results_per_page=10`
-  );
-}
-
-//
-// =====================
-// DEDUPE RESULTS
-// =====================
-//
-function dedupe(jobs) {
-  const seen = new Set();
-
-  return jobs.filter(j => {
-    const key = j.title + j.employer + j.location;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
-
-//
-// =====================
-// RENDER TABLE
-// =====================
-//
-function render() {
-  const tbody = document.querySelector("#resultsTable tbody");
-  tbody.innerHTML = "";
-
-  if (!results || results.length === 0) {
-    console.warn("NO RESULTS FOUND");
+  if (!btn) {
+    console.error("BUTTON NOT FOUND ❌");
     return;
   }
 
-  for (const job of results) {
-    tbody.innerHTML += `
-      <tr>
-        <td>${job.title}</td>
-        <td>${job.employer}</td>
-        <td>${job.location}</td>
-        <td>${job.posted}</td>
-        <td><a href="${job.link}" target="_blank">View</a></td>
-      </tr>
-    `;
-  }
-}
+  btn.addEventListener("click", () => {
+    console.log("BUTTON CLICKED ✔");
+
+    const skills = document.getElementById("skills")?.value;
+    const location = document.getElementById("location")?.value;
+    const radius = document.getElementById("radius")?.value;
+
+    console.log("INPUT VALUES:", { skills, location, radius });
+
+    document.getElementById("requestPreview").textContent =
+      "JS IS WORKING ✔\n\n" +
+      JSON.stringify({ skills, location, radius }, null, 2);
+  });
+};
