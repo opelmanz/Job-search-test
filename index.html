@@ -11,20 +11,14 @@
   <div class="container">
     <h1>Job Matcher</h1>
 
-    <p>Paste your resume:</p>
     <textarea id="resume" placeholder="Paste your resume here..."></textarea>
 
-    <p>Skills (for testing — comma separated):</p>
-    <input id="skills" placeholder="e.g. welding, cad, robotics" />
+    <input id="skills" placeholder="Skills (comma separated)" />
 
-    <p>Job preferences:</p>
+    <input id="location" placeholder="City, State" />
 
-    <input id="location" placeholder="City, State (e.g. Los Angeles, CA)" />
+    <input id="radius" type="number" placeholder="Distance (miles)" />
 
-    <label>Distance from desired city (miles):</label>
-    <input id="radius" type="number" placeholder="e.g. 25" min="0" />
-
-    <label>Job posting age:</label>
     <select id="recency">
       <option value="1">Within 24 hours</option>
       <option value="2">Within 48 hours</option>
@@ -43,8 +37,10 @@
       <thead>
         <tr>
           <th>Job Title</th>
+          <th>Employer</th>
           <th>Location</th>
-          <th>Score</th>
+          <th>Posted Date</th>
+          <th>Link</th>
         </tr>
       </thead>
       <tbody></tbody>
