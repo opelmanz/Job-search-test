@@ -164,7 +164,7 @@ function dedupe(jobs) {
 
 //
 // =====================
-// SALARY (ROUNDED VERSION)
+// SALARY (FIXED + ROUNDING)
 // =====================
 //
 function formatSalary(job) {
@@ -174,6 +174,13 @@ function formatSalary(job) {
   if (min == null && max == null) {
     return "Not listed";
   }
+
+  // force numeric conversion (critical for Adzuna inconsistencies)
+  min = min != null ? Number(min) : null;
+  max = max != null ? Number(max) : null;
+
+  if (min != null && isNaN(min)) min = null;
+  if (max != null && isNaN(max)) max = null;
 
   // round to nearest 1000
   if (min != null) min = Math.round(min / 1000) * 1000;
