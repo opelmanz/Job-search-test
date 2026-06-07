@@ -24,7 +24,7 @@ async function runSearch() {
   const skillsRaw = document.getElementById("skills").value || "";
   const location = document.getElementById("location").value || "Los Angeles, CA";
   const radius = parseInt(document.getElementById("radius").value) || 25;
-  const recency = parseInt(document.getElementById("recency").value) || 7;
+  const recency = parseInt(document.getElementById("recency").value) || 2;
 
   const skills = parseSkills(skillsRaw);
   const query = buildQuery(skills);
@@ -47,10 +47,9 @@ async function runSearch() {
 
     const data = await fetchJobs(url);
 
-    // 🔥 HARD FILTER BY DISTANCE (REAL FIX)
     results = dedupe(filterByDistance(data, radius));
 
-    console.log("TOTAL RESULTS (after filter):", results.length);
+    console.log("TOTAL RESULTS:", results.length);
 
   } catch (err) {
     console.error("API ERROR:", err);
@@ -109,7 +108,6 @@ function filterByDistance(jobs, radiusMiles) {
     const lat = job.location?.latitude;
     const lon = job.location?.longitude;
 
-    // If no coordinates, keep it (can't evaluate)
     if (!lat || !lon) return true;
 
     const distance = haversineMiles(LA_LAT, LA_LON, lat, lon);
@@ -118,11 +116,8 @@ function filterByDistance(jobs, radiusMiles) {
   });
 }
 
-//
-// Haversine formula
-//
 function haversineMiles(lat1, lon1, lat2, lon2) {
-  const R = 3958.8; // Earth radius in miles
+  const R = 3958.8;
 
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
@@ -133,13 +128,11 @@ function haversineMiles(lat1, lon1, lat2, lon2) {
     Math.cos(toRad(lat2)) *
     Math.sin(dLon / 2) ** 2;
 
-  const c = 2 * Math.asin(Math.sqrt(a));
-
-  return R * c;
+  return 2 * R * Math.asin(Math.sqrt(a));
 }
 
-function toRad(value) {
-  return (value * Math.PI) / 180;
+function toRad(v) {
+  return (v * Math.PI) / 180;
 }
 
 //
@@ -188,14 +181,41 @@ function render() {
   tbody.innerHTML = "";
 
   for (const job of results) {
+    const salary = formatSalary(job);
+
     tbody.innerHTML += `
       <tr>
-        <td>${job.title}</td>
+        <td title="${job.title}">
+          ${job.title.length > 60 ? job.title.slice(0, 60) + "..." : job.title}
+        </td>
         <td>${job.company?.display_name || "Unknown"}</td>
+        <td>${salary}</td>
         <td>${job.location?.display_name || "Unknown"}</td>
         <td>${job.created ? new Date(job.created).toLocaleDateString() : ""}</td>
         <td><a href="${job.redirect_url}" target="_blank">View</a></td>
       </tr>
     `;
   }
+}
+
+//
+// =====================
+// SALARY FORMATTER
+// =====================
+//
+function formatSalary(job) {
+  const min = job.salary_min;
+  const max = job.salary_max;
+
+  if (!min && !max) return "—";
+
+  if (min && max) {
+    return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
+  }
+
+  if (min) return `$${min.toLocaleString()}+`;
+
+  if (max) return `Up to $${max.toLocaleString()}`;
+
+  return "—";
 }
