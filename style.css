@@ -59,21 +59,38 @@ button {
 }
 
 /* =========================
-   TABLE
+   TABLE CORE FIX (IMPORTANT)
    ========================= */
 table {
   width: 100%;
   margin-top: 20px;
   border-collapse: collapse;
+  table-layout: fixed;   /* 🔥 forces columns to respect width rules */
 }
 
 th, td {
   border: 1px solid #ddd;
   padding: 8px;
   text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* make table use full width nicely on large screens */
+/* =========================
+   JOB TITLE COLUMN (NARROWED)
+   ========================= */
+#resultsTable th:nth-child(1),
+#resultsTable td:nth-child(1) {
+  width: 280px;
+  max-width: 280px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* =========================
+   HEADER STYLE
+   ========================= */
 th {
   background: #eee;
 }
