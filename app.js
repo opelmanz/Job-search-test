@@ -72,7 +72,7 @@ function buildQuery(skills) {
 
 //
 // =====================
-// API
+// API CALL
 // =====================
 //
 async function fetchJobs(url) {
@@ -126,7 +126,7 @@ function toRad(v) {
 
 //
 // =====================
-// URL
+// URL BUILDER
 // =====================
 //
 function buildUrl(location, query, recency) {
@@ -164,35 +164,47 @@ function dedupe(jobs) {
 
 //
 // =====================
-// SALARY (FIXED + ROUNDING)
+// SALARY (FIXED FOR YOUR FORMAT)
 // =====================
 //
 function formatSalary(job) {
   let min = job.salary_min;
   let max = job.salary_max;
 
-  if (min == null && max == null) {
-    return "Not listed";
+  // fallback if missing
+  if (min == null && max == null) return "Not listed";
+
+  // normalize Adzuna formats like "$79,243.53"
+  function normalize(val) {
+    if (val == null) return null;
+
+    if (typeof val === "string") {
+      val = val.replace(/\$/g, "").replace(/,/g, "").trim();
+    }
+
+    const num = parseFloat(val);
+    return isNaN(num) ? null : num;
   }
 
-  // force numeric conversion (critical for Adzuna inconsistencies)
-  min = min != null ? Number(min) : null;
-  max = max != null ? Number(max) : null;
+  min = normalize(min);
+  max = normalize(max);
 
-  if (min != null && isNaN(min)) min = null;
-  if (max != null && isNaN(max)) max = null;
+  if (min == null && max == null) return "Not listed";
 
   // round to nearest 1000
   if (min != null) min = Math.round(min / 1000) * 1000;
   if (max != null) max = Math.round(max / 1000) * 1000;
 
+  const fmt = v => `$${v.toLocaleString()}`;
+
   if (min != null && max != null) {
-    return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
+    if (min === max) return fmt(min);
+    return `${fmt(min)} - ${fmt(max)}`;
   }
 
-  if (min != null) return `$${min.toLocaleString()}+`;
+  if (min != null) return `${fmt(min)}+`;
 
-  if (max != null) return `Up to $${max.toLocaleString()}`;
+  if (max != null) return `Up to ${fmt(max)}`;
 
   return "Not listed";
 }
