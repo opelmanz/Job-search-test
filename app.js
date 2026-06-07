@@ -164,7 +164,7 @@ function dedupe(jobs) {
 
 //
 // =====================
-// SALARY (K FORMAT)
+// SALARY (RAW SAFE DISPLAY)
 // =====================
 //
 function formatSalary(job) {
@@ -184,26 +184,23 @@ function formatSalary(job) {
     return isNaN(num) ? null : num;
   }
 
-  function toK(v) {
-    if (v == null) return null;
-    return Math.round(v / 1000); // 48000 -> 48
+  min = normalize(min);
+  max = normalize(max);
+
+  function format(v) {
+    return `$${Math.round(v).toLocaleString()}`;
   }
-
-  min = toK(normalize(min));
-  max = toK(normalize(max));
-
-  if (min == null && max == null) return "Not listed";
-
-  const fmt = v => `$${v}K`;
 
   if (min != null && max != null) {
-    if (min === max) return fmt(min);
-    return `${fmt(min)} - ${fmt(max)}`;
+    if (Math.round(min) === Math.round(max)) {
+      return format(min);
+    }
+    return `${format(min)} - ${format(max)}`;
   }
 
-  if (min != null) return `${fmt(min)}+`;
+  if (min != null) return `${format(min)}+`;
 
-  if (max != null) return `Up to ${fmt(max)}`;
+  if (max != null) return `Up to ${format(max)}`;
 
   return "Not listed";
 }
