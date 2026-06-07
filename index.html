@@ -10,7 +10,6 @@
 
   <div class="container">
 
-   
     <div style="
       background:#222;
       color:#fff;
@@ -19,7 +18,7 @@
       margin-bottom:15px;
       font-size:14px;
     ">
-      Debug notes - Updated table width to 200px 6.7.2026 1:05pm
+      Debug notes - Include salary as column 6.7.2026 1:08pm
     </div>
 
     <h1>Job Matcher</h1>
@@ -28,15 +27,15 @@
     <label><strong>Skills</strong></label>
     <input id="skills" placeholder="e.g. welding, robotics, python, cad" />
 
-    <!-- LOCATION (DEFAULT FILLED) -->
+    <!-- LOCATION -->
     <label><strong>Location (City, State)</strong></label>
     <input id="location" value="Los Angeles, CA" />
 
-    <!-- DISTANCE (DEFAULT FILLED) -->
+    <!-- DISTANCE -->
     <label><strong>Distance (miles)</strong></label>
     <input id="radius" type="number" value="25" />
 
-    <!-- RECENCY (DEFAULT FILLED) -->
+    <!-- RECENCY -->
     <label><strong>Posted Within</strong></label>
     <select id="recency">
       <option value="1">Within 24 hours</option>
@@ -69,6 +68,7 @@
         <tr>
           <th>Job Title</th>
           <th>Employer</th>
+          <th>Salary</th>
           <th>Location</th>
           <th>Posted</th>
           <th>Link</th>
@@ -91,5 +91,6 @@
   </div>
 
   <script src="app.js"></script>
+
 </body>
 </html>
