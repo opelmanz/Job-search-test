@@ -13,6 +13,8 @@ let results = [];
 
 console.log("APP JS LOADED ✔");
 
+window.runSearch = runSearch;
+
 //
 // =====================
 // MAIN
@@ -161,41 +163,16 @@ function dedupe(jobs) {
   const seen = new Set();
 
   return jobs.filter(j => {
-    const key = j.title + j.company?.display_name + j.location?.display_name;
+    const key =
+      j.title +
+      j.company?.display_name +
+      j.location?.display_name;
 
     if (seen.has(key)) return false;
 
     seen.add(key);
     return true;
   });
-}
-
-//
-// =====================
-// RENDER
-// =====================
-//
-function render() {
-  const tbody = document.querySelector("#resultsTable tbody");
-
-  tbody.innerHTML = "";
-
-  for (const job of results) {
-    const salary = formatSalary(job);
-
-    tbody.innerHTML += `
-      <tr>
-        <td title="${job.title}">
-          ${job.title.length > 60 ? job.title.slice(0, 60) + "..." : job.title}
-        </td>
-        <td>${job.company?.display_name || "Unknown"}</td>
-        <td>${salary}</td>
-        <td>${job.location?.display_name || "Unknown"}</td>
-        <td>${job.created ? new Date(job.created).toLocaleDateString() : ""}</td>
-        <td><a href="${job.redirect_url}" target="_blank">View</a></td>
-      </tr>
-    `;
-  }
 }
 
 //
@@ -218,4 +195,32 @@ function formatSalary(job) {
   if (max) return `Up to $${max.toLocaleString()}`;
 
   return "—";
+}
+
+//
+// =====================
+// RENDER
+// =====================
+//
+function render() {
+  const tbody = document.querySelector("#resultsTable tbody");
+
+  tbody.innerHTML = "";
+
+  for (const job of results) {
+    const salary = formatSalary(job);
+
+    tbody.innerHTML += `
+      <tr>
+        <td title="${job.title}">
+          ${job.title.length > 60 ? job.title.slice(0, 60) + "..." : job.title}
+        </td>
+        <td>${job.company?.display_name || "Unknown"}</td>
+        <td>${job.location?.display_name || "Unknown"}</td>
+        <td>${salary}</td>
+        <td>${job.created ? new Date(job.created).toLocaleDateString() : ""}</td>
+        <td><a href="${job.redirect_url}" target="_blank">View</a></td>
+      </tr>
+    `;
+  }
 }
