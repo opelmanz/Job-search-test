@@ -1,10 +1,13 @@
 //
 // =============================
-// CONFIG (OPTIONAL API KEYS)
+// CONFIG
 // =============================
 //
 const ADZUNA_APP_ID = "5df668db";
 const ADZUNA_APP_KEY = "3a8ebf8494b25d4ee83289b29fb84393";
+
+const LA_LAT = 34.0522;
+const LA_LON = -118.2437;
 
 let results = [];
 
@@ -34,8 +37,6 @@ async function runSearch() {
     recency
   };
 
-  console.log("REQUEST:", requestInfo);
-
   document.getElementById("requestPreview").textContent =
     JSON.stringify(requestInfo, null, 2);
 
@@ -46,9 +47,11 @@ async function runSearch() {
 
     const data = await fetchJobs(url);
 
-    results = dedupe(data);
+    // 🔥 HARD FILTER BY DISTANCE (REAL FIX)
+    results = dedupe(filterByDistance(data, radius));
 
-    console.log("TOTAL RESULTS:", results.length);
+    console.log("TOTAL RESULTS (after filter):", results.length);
+
   } catch (err) {
     console.error("API ERROR:", err);
     results = [];
@@ -93,15 +96,50 @@ async function fetchJobs(url) {
 
   if (!data.results) return [];
 
-  return data.results.map(job => ({
-    title: job.title,
-    employer: job.company?.display_name || "Unknown",
-    location: job.location?.display_name || "Unknown",
-    posted: job.created
-      ? new Date(job.created).toLocaleDateString()
-      : "Unknown",
-    link: job.redirect_url || "#"
-  }));
+  return data.results;
+}
+
+//
+// =====================
+// DISTANCE FILTER
+// =====================
+//
+function filterByDistance(jobs, radiusMiles) {
+  return jobs.filter(job => {
+    const lat = job.location?.latitude;
+    const lon = job.location?.longitude;
+
+    // If no coordinates, keep it (can't evaluate)
+    if (!lat || !lon) return true;
+
+    const distance = haversineMiles(LA_LAT, LA_LON, lat, lon);
+
+    return distance <= radiusMiles;
+  });
+}
+
+//
+// Haversine formula
+//
+function haversineMiles(lat1, lon1, lat2, lon2) {
+  const R = 3958.8; // Earth radius in miles
+
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) *
+    Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) ** 2;
+
+  const c = 2 * Math.asin(Math.sqrt(a));
+
+  return R * c;
+}
+
+function toRad(value) {
+  return (value * Math.PI) / 180;
 }
 
 //
@@ -116,7 +154,6 @@ function buildUrl(location, query, recency, radius) {
     `&app_key=${ADZUNA_APP_KEY}` +
     `&what=${encodeURIComponent(query)}` +
     `&where=${encodeURIComponent(location)}` +
-    `&distance=${radius}` +
     `&max_days_old=${recency}` +
     `&results_per_page=50`
   );
@@ -131,11 +168,9 @@ function dedupe(jobs) {
   const seen = new Set();
 
   return jobs.filter(j => {
-    const key = j.title + j.employer + j.location;
+    const key = j.title + j.company?.display_name + j.location?.display_name;
 
-    if (seen.has(key)) {
-      return false;
-    }
+    if (seen.has(key)) return false;
 
     seen.add(key);
     return true;
@@ -156,10 +191,10 @@ function render() {
     tbody.innerHTML += `
       <tr>
         <td>${job.title}</td>
-        <td>${job.employer}</td>
-        <td>${job.location}</td>
-        <td>${job.posted}</td>
-        <td><a href="${job.link}" target="_blank">View</a></td>
+        <td>${job.company?.display_name || "Unknown"}</td>
+        <td>${job.location?.display_name || "Unknown"}</td>
+        <td>${job.created ? new Date(job.created).toLocaleDateString() : ""}</td>
+        <td><a href="${job.redirect_url}" target="_blank">View</a></td>
       </tr>
     `;
   }
