@@ -84,7 +84,7 @@ th {
 /* Job Title (largest column) */
 th:nth-child(1),
 td:nth-child(1) {
-  width: 30% !important;
+  width: 25% !important;
 }
 
 /* Employer */
@@ -96,13 +96,13 @@ td:nth-child(2) {
 /* Location */
 th:nth-child(3),
 td:nth-child(3) {
-  width: 15% !important;
+  width: 25% !important;
 }
 
 /* Salary */
 th:nth-child(4),
 td:nth-child(4) {
-  width: 15% !important;
+  width: 10% !important;
 }
 
 /* Posted */
