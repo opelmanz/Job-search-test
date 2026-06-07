@@ -31,19 +31,11 @@ async function runSearch() {
   const skills = parseSkills(skillsRaw);
   const query = buildQuery(skills);
 
-  const requestInfo = {
-    skills,
-    query,
-    location,
-    radius,
-    recency
-  };
-
   document.getElementById("requestPreview").textContent =
-    JSON.stringify(requestInfo, null, 2);
+    JSON.stringify({ skills, query, location, radius, recency }, null, 2);
 
   try {
-    const url = buildUrl(location, query, recency, radius);
+    const url = buildUrl(location, query, recency);
 
     console.log("FETCH:", url);
 
@@ -80,24 +72,20 @@ function buildQuery(skills) {
 
 //
 // =====================
-// API CALL
+// API
 // =====================
 //
 async function fetchJobs(url) {
   const res = await fetch(url);
 
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status}`);
-  }
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
   const data = await res.json();
 
   document.getElementById("debugOutput").textContent =
     JSON.stringify(data, null, 2);
 
-  if (!data.results) return [];
-
-  return data.results;
+  return data.results || [];
 }
 
 //
@@ -112,9 +100,8 @@ function filterByDistance(jobs, radiusMiles) {
 
     if (!lat || !lon) return true;
 
-    const distance = haversineMiles(LA_LAT, LA_LON, lat, lon);
-
-    return distance <= radiusMiles;
+    const d = haversineMiles(LA_LAT, LA_LON, lat, lon);
+    return d <= radiusMiles;
   });
 }
 
@@ -139,10 +126,10 @@ function toRad(v) {
 
 //
 // =====================
-// URL BUILDER
+// URL
 // =====================
 //
-function buildUrl(location, query, recency, radius) {
+function buildUrl(location, query, recency) {
   return (
     `https://api.adzuna.com/v1/api/jobs/us/search/1` +
     `?app_id=${ADZUNA_APP_ID}` +
@@ -164,9 +151,9 @@ function dedupe(jobs) {
 
   return jobs.filter(j => {
     const key =
-      j.title +
-      j.company?.display_name +
-      j.location?.display_name;
+      (j.title || "") +
+      (j.company?.display_name || "") +
+      (j.location?.display_name || "");
 
     if (seen.has(key)) return false;
 
@@ -177,29 +164,32 @@ function dedupe(jobs) {
 
 //
 // =====================
-// SALARY FORMATTER
+// SALARY (FIXED + ROBUST)
 // =====================
 //
 function formatSalary(job) {
   const min = job.salary_min;
   const max = job.salary_max;
 
-  if (!min && !max) return "—";
-
-  if (min && max) {
-    return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
+  // Adzuna often returns NOTHING for US jobs
+  if (min == null && max == null) {
+    return "Not listed";
   }
 
-  if (min) return `$${min.toLocaleString()}+`;
+  if (min != null && max != null) {
+    return `$${Number(min).toLocaleString()} - $${Number(max).toLocaleString()}`;
+  }
 
-  if (max) return `Up to $${max.toLocaleString()}`;
+  if (min != null) return `$${Number(min).toLocaleString()}+`;
 
-  return "—";
+  if (max != null) return `Up to $${Number(max).toLocaleString()}`;
+
+  return "Not listed";
 }
 
 //
 // =====================
-// RENDER
+// RENDER (MATCHES YOUR TABLE ORDER)
 // =====================
 //
 function render() {
