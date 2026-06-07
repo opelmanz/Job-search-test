@@ -102,19 +102,19 @@ td:nth-child(3) {
 /* Salary */
 th:nth-child(4),
 td:nth-child(4) {
-  width: 15% !important;
+  width: 25% !important;
 }
 
 /* Posted */
 th:nth-child(5),
 td:nth-child(5) {
-  width: 10% !important;
+  width: 5% !important;
 }
 
 /* Link */
 th:nth-child(6),
 td:nth-child(6) {
-  width: 10% !important;
+  width: 5% !important;
 }
 
 /* =========================
