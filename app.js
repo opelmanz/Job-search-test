@@ -164,32 +164,35 @@ function dedupe(jobs) {
 
 //
 // =====================
-// SALARY (FIXED + ROBUST)
+// SALARY (ROUNDED VERSION)
 // =====================
 //
 function formatSalary(job) {
-  const min = job.salary_min;
-  const max = job.salary_max;
+  let min = job.salary_min;
+  let max = job.salary_max;
 
-  // Adzuna often returns NOTHING for US jobs
   if (min == null && max == null) {
     return "Not listed";
   }
 
+  // round to nearest 1000
+  if (min != null) min = Math.round(min / 1000) * 1000;
+  if (max != null) max = Math.round(max / 1000) * 1000;
+
   if (min != null && max != null) {
-    return `$${Number(min).toLocaleString()} - $${Number(max).toLocaleString()}`;
+    return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
   }
 
-  if (min != null) return `$${Number(min).toLocaleString()}+`;
+  if (min != null) return `$${min.toLocaleString()}+`;
 
-  if (max != null) return `Up to $${Number(max).toLocaleString()}`;
+  if (max != null) return `Up to $${max.toLocaleString()}`;
 
   return "Not listed";
 }
 
 //
 // =====================
-// RENDER (MATCHES YOUR TABLE ORDER)
+// RENDER
 // =====================
 //
 function render() {
