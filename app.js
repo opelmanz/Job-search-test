@@ -164,7 +164,7 @@ function dedupe(jobs) {
 
 //
 // =====================
-// SALARY (RAW SAFE DISPLAY)
+// SALARY (RAW DISPLAY ONLY)
 // =====================
 //
 function formatSalary(job) {
@@ -173,7 +173,7 @@ function formatSalary(job) {
 
   if (min == null && max == null) return "Not listed";
 
-  function normalize(val) {
+  function clean(val) {
     if (val == null) return null;
 
     if (typeof val === "string") {
@@ -184,17 +184,13 @@ function formatSalary(job) {
     return isNaN(num) ? null : num;
   }
 
-  min = normalize(min);
-  max = normalize(max);
+  min = clean(min);
+  max = clean(max);
 
-  function format(v) {
-    return `$${Math.round(v).toLocaleString()}`;
-  }
+  const format = v => `$${Number(v).toLocaleString()}`;
 
+  // ALWAYS show both if present
   if (min != null && max != null) {
-    if (Math.round(min) === Math.round(max)) {
-      return format(min);
-    }
     return `${format(min)} - ${format(max)}`;
   }
 
