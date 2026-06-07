@@ -5,11 +5,11 @@ body {
 }
 
 /* =========================
-   MAIN CONTAINER (WIDER FIX)
+   MAIN CONTAINER
    ========================= */
 .container {
   width: 100%;
-  max-width: 1400px;   /* increased from 800px */
+  max-width: 1400px;
   margin: 40px auto;
   background: white;
   padding: 20px;
@@ -26,24 +26,13 @@ input {
   box-sizing: border-box;
 }
 
-/* resume box already good — just keep consistent */
-#resume {
-  width: 100%;
-  min-height: 150px;
-  resize: vertical;
-  padding: 10px;
-  font-family: inherit;
-  font-size: 14px;
-  box-sizing: border-box;
-}
-
-/* radius smaller field */
+/* radius field */
 #radius {
-  width: 100px;
+  width: 120px;
 }
 
 /* =========================
-   BUTTON (cleaned duplicate)
+   BUTTON
    ========================= */
 button {
   display: block;
@@ -59,38 +48,77 @@ button {
 }
 
 /* =========================
-   TABLE CORE FIX (IMPORTANT)
+   TABLE BASE
    ========================= */
 table {
   width: 100%;
   margin-top: 20px;
   border-collapse: collapse;
-  table-layout: fixed;   /* 🔥 forces columns to respect width rules */
+
+  /* IMPORTANT: stabilizes column widths */
+  table-layout: fixed;
 }
 
 th, td {
   border: 1px solid #ddd;
-  padding: 8px;
+  padding: 10px;
   text-align: left;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  vertical-align: top;
+
+  /* prevents long text breaking layout */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
-/* =========================
-   JOB TITLE COLUMN (NARROWED)
-   ========================= */
-#resultsTable th:nth-child(1),
-#resultsTable td:nth-child(1) {
-  width: 200px;
-  max-width: 200px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* =========================
-   HEADER STYLE
-   ========================= */
+/* header styling */
 th {
   background: #eee;
+  font-weight: bold;
+}
+
+/* =========================
+   COLUMN WIDTHS
+   ========================= */
+
+/* Job Title (WIDER) */
+th:nth-child(1),
+td:nth-child(1) {
+  width: 45%;
+}
+
+/* Employer */
+th:nth-child(2),
+td:nth-child(2) {
+  width: 15%;
+}
+
+/* Location */
+th:nth-child(3),
+td:nth-child(3) {
+  width: 20%;
+}
+
+/* Salary */
+th:nth-child(4),
+td:nth-child(4) {
+  width: 10%;
+}
+
+/* Posted */
+th:nth-child(5),
+td:nth-child(5) {
+  width: 10%;
+}
+
+/* Link */
+th:nth-child(6),
+td:nth-child(6) {
+  width: 10%;
+}
+
+/* =========================
+   JOB TITLE CLEANUP
+   ========================= */
+td:nth-child(1) {
+  font-weight: 500;
 }
