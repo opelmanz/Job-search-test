@@ -26,7 +26,7 @@ input {
   box-sizing: border-box;
 }
 
-/* radius field */
+/* radius input */
 #radius {
   width: 120px;
 }
@@ -48,24 +48,25 @@ button {
 }
 
 /* =========================
-   TABLE BASE
+   TABLE BASE (IMPORTANT FIX)
    ========================= */
 table {
   width: 100%;
   margin-top: 20px;
   border-collapse: collapse;
 
-  /* IMPORTANT: stabilizes column widths */
+  /* CRITICAL: forces column width rules to work */
   table-layout: fixed;
 }
 
+/* cells */
 th, td {
   border: 1px solid #ddd;
   padding: 10px;
   text-align: left;
   vertical-align: top;
 
-  /* prevents long text breaking layout */
+  /* ensures long job titles wrap properly */
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
@@ -77,48 +78,58 @@ th {
 }
 
 /* =========================
-   COLUMN WIDTHS
+   COLUMN WIDTH CONTROL
    ========================= */
 
-/* Job Title (WIDER) */
+/* Job Title (largest column) */
 th:nth-child(1),
 td:nth-child(1) {
-  width: 45%;
+  width: 50% !important;
 }
 
 /* Employer */
 th:nth-child(2),
 td:nth-child(2) {
-  width: 15%;
+  width: 15% !important;
 }
 
 /* Location */
 th:nth-child(3),
 td:nth-child(3) {
-  width: 20%;
+  width: 15% !important;
 }
 
 /* Salary */
 th:nth-child(4),
 td:nth-child(4) {
-  width: 10%;
+  width: 15% !important;
 }
 
 /* Posted */
 th:nth-child(5),
 td:nth-child(5) {
-  width: 10%;
+  width: 10% !important;
 }
 
 /* Link */
 th:nth-child(6),
 td:nth-child(6) {
-  width: 10%;
+  width: 10% !important;
 }
 
 /* =========================
-   JOB TITLE CLEANUP
+   JOB TITLE VISUAL CLEANUP
    ========================= */
 td:nth-child(1) {
   font-weight: 500;
+}
+
+/* optional: keep links clean */
+a {
+  color: #2d6cdf;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
 }
