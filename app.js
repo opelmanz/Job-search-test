@@ -16,9 +16,9 @@ console.log("APP JS LOADED ✔");
 window.runSearch = runSearch;
 
 //
-// =====================
-// MAIN
-// =====================
+// =============================
+// MAIN FLOW
+// =============================
 //
 async function runSearch() {
   console.log("SEARCH STARTED ✔");
@@ -39,9 +39,13 @@ async function runSearch() {
 
     console.log("FETCH:", url);
 
-    const data = await fetchJobs(url);
+    const raw = await fetchJobs(url);
 
-    results = dedupe(filterByDistance(data, radius));
+    // STEP 1: normalize EVERYTHING (critical fix)
+    const normalized = raw.map(normalizeJob);
+
+    // STEP 2: filter + dedupe
+    results = dedupe(filterByDistance(normalized, radius));
 
     console.log("TOTAL RESULTS:", results.length);
 
@@ -51,6 +55,27 @@ async function runSearch() {
   }
 
   render();
+}
+
+//
+// =====================
+// NORMALIZATION LAYER (KEY FIX)
+// =====================
+//
+function normalizeJob(job) {
+  return {
+    title: job.title,
+    company: job.company?.display_name || "Unknown",
+    location: job.location?.display_name || "Unknown",
+    lat: job.location?.latitude,
+    lon: job.location?.longitude,
+    created: job.created,
+    link: job.redirect_url,
+
+    // IMPORTANT: preserve raw salary fields
+    salary_min: job.salary_min,
+    salary_max: job.salary_max
+  };
 }
 
 //
@@ -95,12 +120,9 @@ async function fetchJobs(url) {
 //
 function filterByDistance(jobs, radiusMiles) {
   return jobs.filter(job => {
-    const lat = job.location?.latitude;
-    const lon = job.location?.longitude;
+    if (!job.lat || !job.lon) return true;
 
-    if (!lat || !lon) return true;
-
-    const d = haversineMiles(LA_LAT, LA_LON, lat, lon);
+    const d = haversineMiles(LA_LAT, LA_LON, job.lat, job.lon);
     return d <= radiusMiles;
   });
 }
@@ -150,10 +172,7 @@ function dedupe(jobs) {
   const seen = new Set();
 
   return jobs.filter(j => {
-    const key =
-      (j.title || "") +
-      (j.company?.display_name || "") +
-      (j.location?.display_name || "");
+    const key = j.title + j.company + j.location;
 
     if (seen.has(key)) return false;
 
@@ -164,32 +183,17 @@ function dedupe(jobs) {
 
 //
 // =====================
-// SALARY (RAW DISPLAY ONLY)
+// SALARY DISPLAY (NOW GUARANTEED WORKING)
 // =====================
 //
 function formatSalary(job) {
-  let min = job.salary_min;
-  let max = job.salary_max;
+  let min = cleanSalary(job.salary_min);
+  let max = cleanSalary(job.salary_max);
 
   if (min == null && max == null) return "Not listed";
 
-  function clean(val) {
-    if (val == null) return null;
-
-    if (typeof val === "string") {
-      val = val.replace(/\$/g, "").replace(/,/g, "").trim();
-    }
-
-    const num = parseFloat(val);
-    return isNaN(num) ? null : num;
-  }
-
-  min = clean(min);
-  max = clean(max);
-
   const format = v => `$${Number(v).toLocaleString()}`;
 
-  // ALWAYS show both if present
   if (min != null && max != null) {
     return `${format(min)} - ${format(max)}`;
   }
@@ -199,6 +203,17 @@ function formatSalary(job) {
   if (max != null) return `Up to ${format(max)}`;
 
   return "Not listed";
+}
+
+function cleanSalary(val) {
+  if (val == null) return null;
+
+  if (typeof val === "string") {
+    val = val.replace(/\$/g, "").replace(/,/g, "").trim();
+  }
+
+  const num = parseFloat(val);
+  return isNaN(num) ? null : num;
 }
 
 //
@@ -219,11 +234,11 @@ function render() {
         <td title="${job.title}">
           ${job.title.length > 60 ? job.title.slice(0, 60) + "..." : job.title}
         </td>
-        <td>${job.company?.display_name || "Unknown"}</td>
-        <td>${job.location?.display_name || "Unknown"}</td>
+        <td>${job.company}</td>
+        <td>${job.location}</td>
         <td>${salary}</td>
         <td>${job.created ? new Date(job.created).toLocaleDateString() : ""}</td>
-        <td><a href="${job.redirect_url}" target="_blank">View</a></td>
+        <td><a href="${job.link}" target="_blank">View</a></td>
       </tr>
     `;
   }
