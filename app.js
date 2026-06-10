@@ -11,6 +11,7 @@ const LA_LON = -118.2437;
 
 let results = [];
 
+document.getElementById("debugBanner").textContent = "app.js loaded — v1.1";
 console.log("APP JS LOADED ✔");
 
 window.runSearch = runSearch;
