@@ -29,26 +29,53 @@ async function runSearch() {
   const recency = parseInt(document.getElementById("recency").value) || 2;
 
   const skills = parseSkills(skillsRaw);
-  const query = buildQuery(skills);
 
   document.getElementById("requestPreview").textContent =
-    JSON.stringify({ skills, query, location, radius, recency }, null, 2);
+    JSON.stringify(
+      {
+        skills,
+        location,
+        radius,
+        recency
+      },
+      null,
+      2
+    );
 
   try {
-    const url = buildUrl(location, query, recency);
+    let allRawJobs = [];
 
-    console.log("FETCH:", url);
+    // If no skills entered, do one broad search
+    if (skills.length === 0) {
+      const url = buildUrl(location, "", recency);
 
-    const raw = await fetchJobs(url);
+      console.log("FETCH:", url);
 
-    // STEP 1: normalize EVERYTHING (critical fix)
-    const normalized = raw.map(normalizeJob);
+      const raw = await fetchJobs(url);
+
+      allRawJobs.push(...raw);
+    } else {
+      // One search per skill/title = OR behavior
+      for (const skill of skills) {
+        const url = buildUrl(location, skill, recency);
+
+        console.log("FETCH:", url);
+
+        const raw = await fetchJobs(url);
+
+        allRawJobs.push(...raw);
+      }
+    }
+
+    // STEP 1: normalize EVERYTHING
+    const normalized = allRawJobs.map(normalizeJob);
 
     // STEP 2: filter + dedupe
-    results = dedupe(filterByDistance(normalized, radius));
+    results = dedupe(
+      filterByDistance(normalized, radius)
+    );
 
     console.log("TOTAL RESULTS:", results.length);
-
   } catch (err) {
     console.error("API ERROR:", err);
     results = [];
@@ -59,7 +86,7 @@ async function runSearch() {
 
 //
 // =====================
-// NORMALIZATION LAYER (KEY FIX)
+// NORMALIZATION LAYER
 // =====================
 //
 function normalizeJob(job) {
@@ -72,7 +99,7 @@ function normalizeJob(job) {
     created: job.created,
     link: job.redirect_url,
 
-    // IMPORTANT: preserve raw salary fields
+    // preserve raw salary fields
     salary_min: job.salary_min,
     salary_max: job.salary_max
   };
@@ -91,10 +118,6 @@ function parseSkills(input) {
     .filter(Boolean);
 }
 
-function buildQuery(skills) {
-  return skills.slice(0, 8).join(" ");
-}
-
 //
 // =====================
 // API
@@ -103,7 +126,9 @@ function buildQuery(skills) {
 async function fetchJobs(url) {
   const res = await fetch(url);
 
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
 
   const data = await res.json();
 
@@ -120,9 +145,17 @@ async function fetchJobs(url) {
 //
 function filterByDistance(jobs, radiusMiles) {
   return jobs.filter(job => {
-    if (!job.lat || !job.lon) return true;
+    if (job.lat == null || job.lon == null) {
+      return true;
+    }
 
-    const d = haversineMiles(LA_LAT, LA_LON, job.lat, job.lon);
+    const d = haversineMiles(
+      LA_LAT,
+      LA_LON,
+      job.lat,
+      job.lon
+    );
+
     return d <= radiusMiles;
   });
 }
@@ -131,13 +164,13 @@ function haversineMiles(lat1, lon1, lat2, lon2) {
   const R = 3958.8;
 
   const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lat2 - lon1);
+  const dLon = toRad(lon2 - lon1);
 
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos(toRad(lat1)) *
-    Math.cos(toRad(lat2)) *
-    Math.sin(dLon / 2) ** 2;
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) ** 2;
 
   return 2 * R * Math.asin(Math.sqrt(a));
 }
@@ -171,10 +204,17 @@ function buildUrl(location, query, recency) {
 function dedupe(jobs) {
   const seen = new Set();
 
-  return jobs.filter(j => {
-    const key = j.title + j.company + j.location;
+  return jobs.filter(job => {
+    const key =
+      job.title +
+      "|" +
+      job.company +
+      "|" +
+      job.location;
 
-    if (seen.has(key)) return false;
+    if (seen.has(key)) {
+      return false;
+    }
 
     seen.add(key);
     return true;
@@ -183,36 +223,49 @@ function dedupe(jobs) {
 
 //
 // =====================
-// SALARY DISPLAY (NOW GUARANTEED WORKING)
+// SALARY DISPLAY
 // =====================
 //
 function formatSalary(job) {
   let min = cleanSalary(job.salary_min);
   let max = cleanSalary(job.salary_max);
 
-  if (min == null && max == null) return "Not listed";
+  if (min == null && max == null) {
+    return "Not listed";
+  }
 
-  const format = v => `$${Number(v).toLocaleString()}`;
+  const format = value =>
+    `$${Number(value).toLocaleString()}`;
 
   if (min != null && max != null) {
     return `${format(min)} - ${format(max)}`;
   }
 
-  if (min != null) return `${format(min)}+`;
+  if (min != null) {
+    return `${format(min)}+`;
+  }
 
-  if (max != null) return `Up to ${format(max)}`;
+  if (max != null) {
+    return `Up to ${format(max)}`;
+  }
 
   return "Not listed";
 }
 
 function cleanSalary(val) {
-  if (val == null) return null;
+  if (val == null) {
+    return null;
+  }
 
   if (typeof val === "string") {
-    val = val.replace(/\$/g, "").replace(/,/g, "").trim();
+    val = val
+      .replace(/\$/g, "")
+      .replace(/,/g, "")
+      .trim();
   }
 
   const num = parseFloat(val);
+
   return isNaN(num) ? null : num;
 }
 
@@ -222,7 +275,8 @@ function cleanSalary(val) {
 // =====================
 //
 function render() {
-  const tbody = document.querySelector("#resultsTable tbody");
+  const tbody =
+    document.querySelector("#resultsTable tbody");
 
   tbody.innerHTML = "";
 
@@ -232,13 +286,25 @@ function render() {
     tbody.innerHTML += `
       <tr>
         <td title="${job.title}">
-          ${job.title.length > 60 ? job.title.slice(0, 60) + "..." : job.title}
+          ${
+            job.title.length > 60
+              ? job.title.slice(0, 60) + "..."
+              : job.title
+          }
         </td>
         <td>${job.company}</td>
         <td>${job.location}</td>
         <td>${salary}</td>
-        <td>${job.created ? new Date(job.created).toLocaleDateString() : ""}</td>
-        <td><a href="${job.link}" target="_blank">View</a></td>
+        <td>${
+          job.created
+            ? new Date(job.created).toLocaleDateString()
+            : ""
+        }</td>
+        <td>
+          <a href="${job.link}" target="_blank">
+            View
+          </a>
+        </td>
       </tr>
     `;
   }
