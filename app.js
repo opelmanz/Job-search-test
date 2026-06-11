@@ -11,7 +11,7 @@ const LA_LON = -118.2437;
 
 let results = [];
 
-document.getElementById("debugBanner").textContent = "API source test 4";
+document.getElementById("debugBanner").textContent = "API source test 5";
 console.log("APP JS LOADED ✔");
 
 window.runSearch = runSearch;
