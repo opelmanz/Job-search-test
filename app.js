@@ -304,6 +304,7 @@ function render() {
             ? new Date(job.created).toLocaleDateString()
             : ""
         }</td>
+        <td>${job.source || ""}</td>
         <td>
           <a href="${job.link}" target="_blank">
             View
