@@ -11,7 +11,7 @@ const LA_LON = -118.2437;
 
 let results = [];
 
-document.getElementById("debugBanner").textContent = "API source test 5";
+document.getElementById("debugBanner").textContent = "API source test 6";
 console.log("APP JS LOADED ✔");
 
 window.runSearch = runSearch;
@@ -70,7 +70,7 @@ async function runSearch() {
     }
 
     // STEP 1: normalize EVERYTHING
-    const normalized = allRawJobs.map(normalizeJob);
+    const normalized = allRawJobs.map(job => normalizeJob(job, "Adzuna"));
 
     // STEP 2: filter + dedupe
     results = dedupe(
