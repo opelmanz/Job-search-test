@@ -195,6 +195,7 @@ function buildUrl(location, query, recency) {
     `&where=${encodeURIComponent(location)}` +
     `&max_days_old=${recency}` +
     `&results_per_page=50`
+    (minSalary ? `&salary_min=${minSalary}` : ``)
   );
 }
 
