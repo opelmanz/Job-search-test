@@ -91,32 +91,32 @@ th {
 /* Job Title (largest column) */
 th:nth-child(1),
 td:nth-child(1) {
-  width: 28% !important;
+  width: 25% !important;
 }
 /* Employer */
 th:nth-child(2),
 td:nth-child(2) {
-  width: 18% !important;
+  width: 20% !important;
 }
 /* Location */
 th:nth-child(3),
-td:nth-child(3) {   width: 23% !important; }
+td:nth-child(3) {   width: 20% !important; }
 
 /* Salary */
 th:nth-child(4),
-td:nth-child(4) {   width: 15% !important; }
+td:nth-child(4) {   width: 20% !important; }
 
 /* Posted */
 th:nth-child(5),
-td:nth-child(5) {   width: 7% !important; }
+td:nth-child(5) {   width: 5% !important; }
 
 /* Link */
 th:nth-child(6),
-td:nth-child(6) {   width: 3% !important; }
+td:nth-child(6) {   width: 5% !important; }
 
 /* Source */
 th:nth-child(7),
-td:nth-child(7) {   width: 6% !important; }
+td:nth-child(7) {   width: 5% !important; }
 
 /* =========================
    JOB TITLE VISUAL CLEANUP
