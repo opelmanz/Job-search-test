@@ -11,7 +11,7 @@ const LA_LON = -118.2437;
 
 let results = [];
 
-document.getElementById("debugBanner").textContent = "API toggle checkboxes v2";
+document.getElementById("debugBanner").textContent = "API toggle checkboxes 33% width";
 console.log("APP JS LOADED ✔");
 
 window.runSearch = runSearch;
