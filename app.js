@@ -11,7 +11,7 @@ const LA_LON = -118.2437;
 
 let results = [];
 
-document.getElementById("debugBanner").textContent = "reformatting page";
+document.getElementById("debugBanner").textContent = "fixed big crash";
 console.log("APP JS LOADED ✔");
 
 window.runSearch = runSearch;
