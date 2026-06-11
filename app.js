@@ -11,7 +11,7 @@ const LA_LON = -118.2437;
 
 let results = [];
 
-document.getElementById("debugBanner").textContent = "min salary test degbugged";
+document.getElementById("debugBanner").textContent = "API source test";
 console.log("APP JS LOADED ✔");
 
 window.runSearch = runSearch;
