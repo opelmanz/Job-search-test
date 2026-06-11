@@ -11,7 +11,7 @@ const LA_LON = -118.2437;
 
 let results = [];
 
-document.getElementById("debugBanner").textContent = "API MUSE more results";
+document.getElementById("debugBanner").textContent = "API MUSE more results v2";
 console.log("APP JS LOADED ✔");
 
 window.runSearch = runSearch;
@@ -259,10 +259,10 @@ function buildAdzunaUrl(location, query, recency, minSalary) {
 // MUSE URL
 // =====================
 //
-function buildMuseUrl(location, category) {
+function buildMuseUrl(location, category, page = 0) {
   const cityOnly = location.split(",")[0].trim();
   let url =
-    `https://www.themuse.com/api/public/jobs?page=0` +
+    `https://www.themuse.com/api/public/jobs?page=${page}` +
     `&location=${encodeURIComponent(cityOnly)}`;
   if (category) {
     url += `&category=${encodeURIComponent(category)}`;
