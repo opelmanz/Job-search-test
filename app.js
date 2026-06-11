@@ -287,7 +287,7 @@ function render() {
   for (const job of results) {
     const salary = formatSalary(job);
 
-    tbody.innerHTML += `
+ tbody.innerHTML += `
       <tr>
         <td title="${job.title}">
           ${
@@ -304,11 +304,12 @@ function render() {
             ? new Date(job.created).toLocaleDateString()
             : ""
         }</td>
-        <td>  <a href="${job.link}" target="_blank">
-        <td>${job.source || ""}</td>
+        <td>
+          <a href="${job.link}" target="_blank">
             View
           </a>
         </td>
+        <td>${job.source || ""}</td>
       </tr>
     `;
   }
