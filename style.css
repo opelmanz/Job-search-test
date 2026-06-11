@@ -201,7 +201,7 @@ a:hover {
 /* width is 50% - adjust here to rebalance layout */
 .categories-selected-box {
   width: 100%;
-  min-height: 80px;
+  min-height: 40px;
   padding: 10px;
   background: #f9f9f9;
   border: 1px solid #ccc;
