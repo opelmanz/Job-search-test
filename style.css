@@ -30,6 +30,10 @@ input {
 #radius {
   width: 120px;
 }
+/* force location field width */
+#location {
+  width: 33%;
+}
 
 /* =========================
    BUTTON
