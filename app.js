@@ -11,7 +11,7 @@ const LA_LON = -118.2437;
 
 let results = [];
 
-document.getElementById("debugBanner").textContent = "Muse API integration v1";
+document.getElementById("debugBanner").textContent = "Category dropdown list edit v1";
 console.log("APP JS LOADED ✔");
 
 window.runSearch = runSearch;
