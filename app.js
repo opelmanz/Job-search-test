@@ -28,7 +28,7 @@ async function runSearch() {
   const location = document.getElementById("location").value || "Los Angeles, CA";
   const radius = parseInt(document.getElementById("radius").value) || 25;
   const recency = parseInt(document.getElementById("recency").value) || 2;
-
+  const minSalary = parseInt(document.getElementById("minSalary").value) || 0;
   const skills = parseSkills(skillsRaw);
 
   document.getElementById("requestPreview").textContent =
