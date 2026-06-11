@@ -96,23 +96,23 @@ td:nth-child(1) {
 /* Employer */
 th:nth-child(2),
 td:nth-child(2) {
-  width: 20% !important;
+  width: 22% !important;
 }
 /* Location */
 th:nth-child(3),
-td:nth-child(3) {   width: 20% !important; }
+td:nth-child(3) {   width: 22% !important; }
 
 /* Salary */
 th:nth-child(4),
-td:nth-child(4) {   width: 20% !important; }
+td:nth-child(4) {   width: 16% !important; }
 
 /* Posted */
 th:nth-child(5),
-td:nth-child(5) {   width: 5% !important; }
+td:nth-child(5) {   width: 6% !important; }
 
 /* Link */
 th:nth-child(6),
-td:nth-child(6) {   width: 5% !important; }
+td:nth-child(6) {   width: 4% !important; }
 
 /* Source */
 th:nth-child(7),
