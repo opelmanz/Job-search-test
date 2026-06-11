@@ -11,7 +11,7 @@ const LA_LON = -118.2437;
 
 let results = [];
 
-document.getElementById("debugBanner").textContent = "Debug notes - Category box to 100% width, 50vh height v2";
+document.getElementById("debugBanner").textContent = "API toggle checkboxes v1";
 console.log("APP JS LOADED ✔");
 
 window.runSearch = runSearch;
@@ -32,6 +32,9 @@ async function runSearch() {
   const skills = parseSkills(skillsRaw);
   const museCategories = getSelectedCategories();
 
+  const adzunaEnabled = document.getElementById("enableAdzuna").checked;
+  const museEnabled = document.getElementById("enableMuse").checked;
+
   document.getElementById("requestPreview").textContent =
     JSON.stringify(
       {
@@ -40,7 +43,9 @@ async function runSearch() {
         radius,
         recency,
         minSalary,
-        museCategories
+        museCategories,
+        adzunaEnabled,
+        museEnabled
       },
       null,
       2
@@ -50,34 +55,37 @@ async function runSearch() {
     let allRawJobs = [];
 
     // ---- ADZUNA ----
-    if (skills.length === 0) {
-      const url = buildAdzunaUrl(location, "", recency, minSalary);
-      console.log("ADZUNA FETCH:", url);
-      const raw = await fetchAdzunaJobs(url);
-      allRawJobs.push(...raw.map(job => normalizeAdzunaJob(job)));
-    } else {
-      for (const skill of skills) {
-        const url = buildAdzunaUrl(location, skill, recency, minSalary);
+    if (adzunaEnabled) {
+      if (skills.length === 0) {
+        const url = buildAdzunaUrl(location, "", recency, minSalary);
         console.log("ADZUNA FETCH:", url);
         const raw = await fetchAdzunaJobs(url);
         allRawJobs.push(...raw.map(job => normalizeAdzunaJob(job)));
+      } else {
+        for (const skill of skills) {
+          const url = buildAdzunaUrl(location, skill, recency, minSalary);
+          console.log("ADZUNA FETCH:", url);
+          const raw = await fetchAdzunaJobs(url);
+          allRawJobs.push(...raw.map(job => normalizeAdzunaJob(job)));
+        }
       }
     }
 
     // ---- MUSE ----
-    for (const category of museCategories) {
-      const url = buildMuseUrl(location, category);
-      console.log("MUSE FETCH:", url);
-      const raw = await fetchMuseJobs(url);
-      allRawJobs.push(...raw.map(job => normalizeMuseJob(job)));
-    }
-
-    // If no categories selected, do one broad Muse search
-    if (museCategories.length === 0) {
-      const url = buildMuseUrl(location, "");
-      console.log("MUSE FETCH (broad):", url);
-      const raw = await fetchMuseJobs(url);
-      allRawJobs.push(...raw.map(job => normalizeMuseJob(job)));
+    if (museEnabled) {
+      if (museCategories.length === 0) {
+        const url = buildMuseUrl(location, "");
+        console.log("MUSE FETCH (broad):", url);
+        const raw = await fetchMuseJobs(url);
+        allRawJobs.push(...raw.map(job => normalizeMuseJob(job)));
+      } else {
+        for (const category of museCategories) {
+          const url = buildMuseUrl(location, category);
+          console.log("MUSE FETCH:", url);
+          const raw = await fetchMuseJobs(url);
+          allRawJobs.push(...raw.map(job => normalizeMuseJob(job)));
+        }
+      }
     }
 
     // STEP 1: filter + dedupe
