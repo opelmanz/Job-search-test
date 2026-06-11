@@ -91,36 +91,36 @@ th {
 /* Job Title (largest column) */
 th:nth-child(1),
 td:nth-child(1) {
-  width: 30% !important;
+  width: 28% !important;
 }
-
 /* Employer */
 th:nth-child(2),
 td:nth-child(2) {
-  width: 20% !important;
+  width: 18% !important;
 }
-
 /* Location */
 th:nth-child(3),
 td:nth-child(3) {
-  width: 30% !important;
+  width: 28% !important;
 }
-
 /* Salary */
 th:nth-child(4),
 td:nth-child(4) {
   width: 10% !important;
 }
-
 /* Posted */
 th:nth-child(5),
 td:nth-child(5) {
   width: 5% !important;
 }
-
-/* Link */
+/* Source */
 th:nth-child(6),
 td:nth-child(6) {
+  width: 6% !important;
+}
+/* Link */
+th:nth-child(7),
+td:nth-child(7) {
   width: 5% !important;
 }
 
