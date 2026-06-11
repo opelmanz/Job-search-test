@@ -11,7 +11,7 @@ const LA_LON = -118.2437;
 
 let results = [];
 
-document.getElementById("debugBanner").textContent = "API MUSE recency logic";
+document.getElementById("debugBanner").textContent = "API MUSE more results";
 console.log("APP JS LOADED ✔");
 
 window.runSearch = runSearch;
@@ -73,17 +73,21 @@ async function runSearch() {
 
     // ---- MUSE ----
     if (museEnabled) {
-      if (museCategories.length === 0) {
-        const url = buildMuseUrl(location, "");
-        console.log("MUSE FETCH (broad):", url);
-        const raw = await fetchMuseJobs(url);
-        allRawJobs.push(...raw.map(job => normalizeMuseJob(job)));
-      } else {
-        for (const category of museCategories) {
-          const url = buildMuseUrl(location, category);
-          console.log("MUSE FETCH:", url);
+if (museCategories.length === 0) {
+        for (let page = 0; page < 3; page++) {
+          const url = buildMuseUrl(location, "", page);
+          console.log("MUSE FETCH (broad):", url);
           const raw = await fetchMuseJobs(url);
           allRawJobs.push(...raw.map(job => normalizeMuseJob(job)));
+        }
+      } else {
+        for (const category of museCategories) {
+          for (let page = 0; page < 3; page++) {
+            const url = buildMuseUrl(location, category, page);
+            console.log("MUSE FETCH:", url);
+            const raw = await fetchMuseJobs(url);
+            allRawJobs.push(...raw.map(job => normalizeMuseJob(job)));
+          }
         }
       }
     }
