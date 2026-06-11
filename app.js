@@ -186,7 +186,7 @@ function toRad(v) {
 // URL
 // =====================
 //
-function buildUrl(location, query, recency) {
+function buildUrl(location, query, recency, minSalary) {
   return (
     `https://api.adzuna.com/v1/api/jobs/us/search/1` +
     `?app_id=${ADZUNA_APP_ID}` +
@@ -194,7 +194,7 @@ function buildUrl(location, query, recency) {
     `&what=${encodeURIComponent(query)}` +
     `&where=${encodeURIComponent(location)}` +
     `&max_days_old=${recency}` +
-    `&results_per_page=50`
+    `&results_per_page=50` +
     (minSalary ? `&salary_min=${minSalary}` : ``)
   );
 }
