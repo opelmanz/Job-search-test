@@ -242,9 +242,10 @@ function buildAdzunaUrl(location, query, recency, minSalary) {
 // =====================
 //
 function buildMuseUrl(location, category) {
+  const cityOnly = location.split(",")[0].trim();
   let url =
     `https://www.themuse.com/api/public/jobs?page=0` +
-    `&location=${encodeURIComponent(location)}`;
+    `&location=${encodeURIComponent(cityOnly)}`;
   if (category) {
     url += `&category=${encodeURIComponent(category)}`;
   }
