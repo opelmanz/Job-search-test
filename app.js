@@ -11,7 +11,7 @@ const LA_LON = -118.2437;
 
 let results = [];
 
-document.getElementById("debugBanner").textContent = "API source test 6";
+document.getElementById("debugBanner").textContent = "Column width adjustment 1";
 console.log("APP JS LOADED ✔");
 
 window.runSearch = runSearch;
