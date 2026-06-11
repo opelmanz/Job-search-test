@@ -11,7 +11,7 @@ const LA_LON = -118.2437;
 
 let results = [];
 
-document.getElementById("debugBanner").textContent = "Category dropdown list edit v1";
+document.getElementById("debugBanner").textContent = "Category dropdown list edit v2";
 console.log("APP JS LOADED ✔");
 
 window.runSearch = runSearch;
