@@ -91,7 +91,7 @@ async function runSearch() {
 // NORMALIZATION LAYER
 // =====================
 //
-function normalizeJob(job) {
+function normalizeJob(job, source = "Adzuna") {
   return {
     title: job.title,
     company: job.company?.display_name || "Unknown",
