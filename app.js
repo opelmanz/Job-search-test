@@ -335,6 +335,16 @@ function updateCategoriesSelected() {
   }
 }
 
+function toggleSelectAll(checkbox) {
+  const allBoxes = document.querySelectorAll(
+    "#categoryDropdownList input[type='checkbox']:not(#selectAllCategories)"
+  );
+  allBoxes.forEach(cb => {
+    cb.checked = checkbox.checked;
+  });
+  updateCategoriesSelected();
+}
+
 //
 // =====================
 // RENDER
