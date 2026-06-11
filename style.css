@@ -34,6 +34,9 @@ input {
 #location {
   width: 20%;
 }
+#minSalary {
+  width: 200px;
+}
 
 /* =========================
    BUTTON
