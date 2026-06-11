@@ -49,7 +49,7 @@ async function runSearch() {
 
     // If no skills entered, do one broad search
     if (skills.length === 0) {
-      const url = buildUrl(location, "", recency);
+      const url = buildUrl(location, "", recency, minSalary);
 
       console.log("FETCH:", url);
 
