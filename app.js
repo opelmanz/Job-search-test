@@ -59,7 +59,7 @@ async function runSearch() {
     } else {
       // One search per skill/title = OR behavior
       for (const skill of skills) {
-        const url = buildUrl(location, skill, recency);
+        const url = buildUrl(location, skill, recency, minSalary);
 
         console.log("FETCH:", url);
 
