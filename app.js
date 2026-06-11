@@ -103,7 +103,8 @@ function normalizeJob(job) {
 
     // preserve raw salary fields
     salary_min: job.salary_min,
-    salary_max: job.salary_max
+    salary_max: job.salary_max,
+     source: source
   };
 }
 
