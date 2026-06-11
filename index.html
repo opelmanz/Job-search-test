@@ -3,11 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Job Matcher</title>
+  <title>Job Finder 3000</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
   <div class="container">
+
     <div id="debugBanner" style="
       background:#222;
       color:#fff;
@@ -15,17 +17,23 @@
       border-radius:8px;
       margin-bottom:15px;
       font-size:14px;
-    "></div>
-    <h1>Job Matcher</h1>
+    ">
+    </div>
+
+    <h1>Job Matcher 3000</h1>
+
     <!-- SKILLS -->
     <label><strong>Skills</strong></label>
     <input id="skills" placeholder="e.g. welding, robotics, python, cad" />
+
     <!-- LOCATION -->
     <label><strong>Location (City, State)</strong></label>
     <input id="location" value="Los Angeles, CA" />
+
     <!-- DISTANCE -->
     <label><strong>Distance (miles)</strong></label>
     <input id="radius" type="number" value="25" />
+
     <!-- RECENCY -->
     <label><strong>Posted Within</strong></label>
     <select id="recency">
@@ -37,8 +45,51 @@
       <option value="21">Within past 3 weeks</option>
       <option value="28">Within past 4 weeks</option>
     </select>
+
+    <!-- REQUEST DEBUG -->
+    <h3>API Request Preview</h3>
+    <pre id="requestPreview" style="
+      background:#111;
+      color:#0ff;
+      padding:10px;
+      border-radius:8px;
+      font-size:12px;
+      max-height:160px;
+      overflow:auto;
+    "></pre>
+
     <button onclick="runSearch()">Find Jobs</button>
+
     <h2>Results</h2>
+
     <table id="resultsTable">
       <thead>
         <tr>
+          <th>Job Title</th>
+          <th>Employer</th>
+          <th>Location</th>
+          <th>Salary</th>
+          <th>Posted</th>
+          <th>Link</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <h3>Raw API Response</h3>
+    <pre id="debugOutput" style="
+      background:#111;
+      color:#0f0;
+      padding:10px;
+      border-radius:8px;
+      font-size:12px;
+      max-height:300px;
+      overflow:auto;
+    "></pre>
+
+  </div>
+
+  <script src="app.js"></script>
+
+</body>
+</html>
