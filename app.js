@@ -37,7 +37,8 @@ async function runSearch() {
         skills,
         location,
         radius,
-        recency
+        recency,
+        minSalary
       },
       null,
       2
