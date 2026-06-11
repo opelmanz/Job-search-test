@@ -174,10 +174,17 @@ a:hover {
 /* each checkbox row */
 .category-dropdown-list label {
   display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 8px;
   padding: 5px 10px;
   cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+}
+.category-dropdown-list input[type="checkbox"] {
+  flex-shrink: 0;
+  margin: 0;
 }
 
 .category-dropdown-list label:hover {
