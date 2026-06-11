@@ -11,7 +11,7 @@ const LA_LON = -118.2437;
 
 let results = [];
 
-document.getElementById("debugBanner").textContent = "Column width adjustment 4";
+document.getElementById("debugBanner").textContent = "Muse category dropdown v1";
 console.log("APP JS LOADED ✔");
 
 window.runSearch = runSearch;
@@ -30,6 +30,7 @@ async function runSearch() {
   const recency = parseInt(document.getElementById("recency").value) || 2;
   const minSalary = parseInt(document.getElementById("minSalary").value) || 0;
   const skills = parseSkills(skillsRaw);
+  const museCategories = getSelectedCategories();
 
   document.getElementById("requestPreview").textContent =
     JSON.stringify(
@@ -38,7 +39,8 @@ async function runSearch() {
         location,
         radius,
         recency,
-        minSalary
+        minSalary,
+        museCategories
       },
       null,
       2
@@ -47,34 +49,40 @@ async function runSearch() {
   try {
     let allRawJobs = [];
 
-    // If no skills entered, do one broad search
+    // ---- ADZUNA ----
     if (skills.length === 0) {
-      const url = buildUrl(location, "", recency, minSalary);
-
-      console.log("FETCH:", url);
-
-      const raw = await fetchJobs(url);
-
-      allRawJobs.push(...raw);
+      const url = buildAdzunaUrl(location, "", recency, minSalary);
+      console.log("ADZUNA FETCH:", url);
+      const raw = await fetchAdzunaJobs(url);
+      allRawJobs.push(...raw.map(job => normalizeAdzunaJob(job)));
     } else {
-      // One search per skill/title = OR behavior
       for (const skill of skills) {
-        const url = buildUrl(location, skill, recency, minSalary);
-
-        console.log("FETCH:", url);
-
-        const raw = await fetchJobs(url);
-
-        allRawJobs.push(...raw);
+        const url = buildAdzunaUrl(location, skill, recency, minSalary);
+        console.log("ADZUNA FETCH:", url);
+        const raw = await fetchAdzunaJobs(url);
+        allRawJobs.push(...raw.map(job => normalizeAdzunaJob(job)));
       }
     }
 
-    // STEP 1: normalize EVERYTHING
-    const normalized = allRawJobs.map(job => normalizeJob(job, "Adzuna"));
+    // ---- MUSE ----
+    for (const category of museCategories) {
+      const url = buildMuseUrl(location, category);
+      console.log("MUSE FETCH:", url);
+      const raw = await fetchMuseJobs(url);
+      allRawJobs.push(...raw.map(job => normalizeMuseJob(job)));
+    }
 
-    // STEP 2: filter + dedupe
+    // If no categories selected, do one broad Muse search
+    if (museCategories.length === 0) {
+      const url = buildMuseUrl(location, "");
+      console.log("MUSE FETCH (broad):", url);
+      const raw = await fetchMuseJobs(url);
+      allRawJobs.push(...raw.map(job => normalizeMuseJob(job)));
+    }
+
+    // STEP 1: filter + dedupe
     results = dedupe(
-      filterByDistance(normalized, radius)
+      filterByDistance(allRawJobs, radius)
     );
 
     console.log("TOTAL RESULTS:", results.length);
@@ -88,10 +96,10 @@ async function runSearch() {
 
 //
 // =====================
-// NORMALIZATION LAYER
+// ADZUNA NORMALIZATION
 // =====================
 //
-function normalizeJob(job, source = "Adzuna") {
+function normalizeAdzunaJob(job) {
   return {
     title: job.title,
     company: job.company?.display_name || "Unknown",
@@ -100,11 +108,30 @@ function normalizeJob(job, source = "Adzuna") {
     lon: job.location?.longitude,
     created: job.created,
     link: job.redirect_url,
-
-    // preserve raw salary fields
     salary_min: job.salary_min,
     salary_max: job.salary_max,
-     source: source
+    source: "Adzuna"
+  };
+}
+
+//
+// =====================
+// MUSE NORMALIZATION
+// =====================
+//
+function normalizeMuseJob(job) {
+  const locationName = job.locations?.[0]?.name || "Unknown";
+  return {
+    title: job.name || "Unknown",
+    company: job.company?.name || "Unknown",
+    location: locationName,
+    lat: null,
+    lon: null,
+    created: job.publication_date,
+    link: job.refs?.landing_page || "#",
+    salary_min: null,
+    salary_max: null,
+    source: "Muse"
   };
 }
 
@@ -123,21 +150,27 @@ function parseSkills(input) {
 
 //
 // =====================
-// API
+// ADZUNA API
 // =====================
 //
-async function fetchJobs(url) {
+async function fetchAdzunaJobs(url) {
   const res = await fetch(url);
-
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status}`);
-  }
-
+  if (!res.ok) throw new Error(`Adzuna HTTP ${res.status}`);
   const data = await res.json();
-
   document.getElementById("debugOutput").textContent =
     JSON.stringify(data, null, 2);
+  return data.results || [];
+}
 
+//
+// =====================
+// MUSE API
+// =====================
+//
+async function fetchMuseJobs(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Muse HTTP ${res.status}`);
+  const data = await res.json();
   return data.results || [];
 }
 
@@ -151,30 +184,25 @@ function filterByDistance(jobs, radiusMiles) {
     if (job.lat == null || job.lon == null) {
       return true;
     }
-
     const d = haversineMiles(
       LA_LAT,
       LA_LON,
       job.lat,
       job.lon
     );
-
     return d <= radiusMiles;
   });
 }
 
 function haversineMiles(lat1, lon1, lat2, lon2) {
   const R = 3958.8;
-
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
-
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos(toRad(lat1)) *
       Math.cos(toRad(lat2)) *
       Math.sin(dLon / 2) ** 2;
-
   return 2 * R * Math.asin(Math.sqrt(a));
 }
 
@@ -184,10 +212,10 @@ function toRad(v) {
 
 //
 // =====================
-// URL
+// ADZUNA URL
 // =====================
 //
-function buildUrl(location, query, recency, minSalary) {
+function buildAdzunaUrl(location, query, recency, minSalary) {
   return (
     `https://api.adzuna.com/v1/api/jobs/us/search/1` +
     `?app_id=${ADZUNA_APP_ID}` +
@@ -202,12 +230,26 @@ function buildUrl(location, query, recency, minSalary) {
 
 //
 // =====================
+// MUSE URL
+// =====================
+//
+function buildMuseUrl(location, category) {
+  let url =
+    `https://www.themuse.com/api/public/jobs?page=0` +
+    `&location=${encodeURIComponent(location)}`;
+  if (category) {
+    url += `&category=${encodeURIComponent(category)}`;
+  }
+  return url;
+}
+
+//
+// =====================
 // DEDUPE
 // =====================
 //
 function dedupe(jobs) {
   const seen = new Set();
-
   return jobs.filter(job => {
     const key =
       job.title +
@@ -215,11 +257,7 @@ function dedupe(jobs) {
       job.company +
       "|" +
       job.location;
-
-    if (seen.has(key)) {
-      return false;
-    }
-
+    if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
@@ -244,33 +282,48 @@ function formatSalary(job) {
   if (min != null && max != null) {
     return `${format(min)} - ${format(max)}`;
   }
-
-  if (min != null) {
-    return `${format(min)}+`;
-  }
-
-  if (max != null) {
-    return `Up to ${format(max)}`;
-  }
-
+  if (min != null) return `${format(min)}+`;
+  if (max != null) return `Up to ${format(max)}`;
   return "Not listed";
 }
 
 function cleanSalary(val) {
-  if (val == null) {
-    return null;
-  }
-
+  if (val == null) return null;
   if (typeof val === "string") {
-    val = val
-      .replace(/\$/g, "")
-      .replace(/,/g, "")
-      .trim();
+    val = val.replace(/\$/g, "").replace(/,/g, "").trim();
   }
-
   const num = parseFloat(val);
-
   return isNaN(num) ? null : num;
+}
+
+//
+// =====================
+// CATEGORY DROPDOWN
+// =====================
+//
+function toggleCategoryDropdown() {
+  const list = document.getElementById("categoryDropdownList");
+  list.style.display = list.style.display === "none" ? "block" : "none";
+}
+
+function getSelectedCategories() {
+  const checkboxes = document.querySelectorAll(
+    "#categoryDropdownList input[type='checkbox']:checked"
+  );
+  return Array.from(checkboxes).map(cb => cb.value);
+}
+
+function updateCategoriesSelected() {
+  const selected = getSelectedCategories();
+  const box = document.getElementById("categoriesSelected");
+  if (selected.length === 0) {
+    box.style.color = "#888";
+    box.textContent =
+      "Failure to select MUSE category may lead to poor search results";
+  } else {
+    box.style.color = "#000";
+    box.textContent = selected.join(", ");
+  }
 }
 
 //
@@ -287,7 +340,7 @@ function render() {
   for (const job of results) {
     const salary = formatSalary(job);
 
- tbody.innerHTML += `
+    tbody.innerHTML += `
       <tr>
         <td title="${job.title}">
           ${
