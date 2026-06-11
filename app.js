@@ -11,7 +11,7 @@ const LA_LON = -118.2437;
 
 let results = [];
 
-document.getElementById("debugBanner").textContent = "Checkbox padding and spacing";
+document.getElementById("debugBanner").textContent = "Category box size";
 console.log("APP JS LOADED ✔");
 
 window.runSearch = runSearch;
