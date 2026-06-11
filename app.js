@@ -11,7 +11,7 @@ const LA_LON = -118.2437;
 
 let results = [];
 
-document.getElementById("debugBanner").textContent = "Category box to 100% width 500px height";
+document.getElementById("debugBanner").textContent = "Category box to 100% width, 50vh height";
 console.log("APP JS LOADED ✔");
 
 window.runSearch = runSearch;
