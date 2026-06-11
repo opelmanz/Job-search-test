@@ -32,7 +32,7 @@ input {
 }
 /* force location field width */
 #location {
-  width: 33%;
+  width: 20%;
 }
 
 /* =========================
