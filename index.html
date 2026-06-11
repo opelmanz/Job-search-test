@@ -34,7 +34,8 @@
       <div id="categoryDropdownToggle" class="category-dropdown-toggle" onclick="toggleCategoryDropdown()">
         Select categories ▾
       </div>
-      <div id="categoryDropdownList" class="category-dropdown-list" style="display:none;">
+     <div id="categoryDropdownList" class="category-dropdown-list" style="display:none;">
+  <label style="border-bottom: 1px solid #eee; margin-bottom: 4px;"><input type="checkbox" id="selectAllCategories" onchange="toggleSelectAll(this)"> <strong>Select All</strong></label>
         <label><input type="checkbox" onchange="updateCategoriesSelected()" value="Accounting"> Accounting</label>
         <label><input type="checkbox" onchange="updateCategoriesSelected()" value="Accounting and Finance"> Accounting and Finance</label>
         <label><input type="checkbox" onchange="updateCategoriesSelected()" value="Account Management"> Account Management</label>
