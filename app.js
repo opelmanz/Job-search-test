@@ -11,7 +11,7 @@ const LA_LON = -118.2437;
 
 let results = [];
 
-document.getElementById("debugBanner").textContent = "new banner logic 4.57";
+document.getElementById("debugBanner").textContent = "new location width";
 console.log("APP JS LOADED ✔");
 
 window.runSearch = runSearch;
