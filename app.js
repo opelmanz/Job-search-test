@@ -11,7 +11,7 @@ const LA_LON = -118.2437;
 
 let results = [];
 
-document.getElementById("debugBanner").textContent = "API MUSE category select all button";
+document.getElementById("debugBanner").textContent = "API MUSE category select all button V2";
 console.log("APP JS LOADED ✔");
 
 window.runSearch = runSearch;
@@ -337,10 +337,12 @@ function updateCategoriesSelected() {
 
 function toggleSelectAll(checkbox) {
   const allBoxes = document.querySelectorAll(
-    "#categoryDropdownList input[type='checkbox']:not(#selectAllCategories)"
+    "#categoryDropdownList input[type='checkbox']"
   );
   allBoxes.forEach(cb => {
-    cb.checked = checkbox.checked;
+    if (cb.id !== "selectAllCategories") {
+      cb.checked = checkbox.checked;
+    }
   });
   updateCategoriesSelected();
 }
