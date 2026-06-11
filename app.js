@@ -11,7 +11,7 @@ const LA_LON = -118.2437;
 
 let results = [];
 
-document.getElementById("debugBanner").textContent = "API MUSE category select all button V2";
+document.getElementById("debugBanner").textContent = "API MUSE recency logic";
 console.log("APP JS LOADED ✔");
 
 window.runSearch = runSearch;
@@ -89,10 +89,12 @@ async function runSearch() {
     }
 
     // STEP 1: filter + dedupe
-    results = dedupe(
-      filterByDistance(allRawJobs, radius)
-    );
-
+  results = dedupe(
+  filterByRecency(
+    filterByDistance(allRawJobs, radius),
+    recency
+  )
+);
     console.log("TOTAL RESULTS:", results.length);
   } catch (err) {
     console.error("API ERROR:", err);
@@ -217,7 +219,19 @@ function haversineMiles(lat1, lon1, lat2, lon2) {
 function toRad(v) {
   return (v * Math.PI) / 180;
 }
-
+//
+// =====================
+// RECENCY FILTER
+// =====================
+//
+function filterByRecency(jobs, maxDaysOld) {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - maxDaysOld);
+  return jobs.filter(job => {
+    if (!job.created) return true;
+    return new Date(job.created) >= cutoff;
+  });
+}
 //
 // =====================
 // ADZUNA URL
